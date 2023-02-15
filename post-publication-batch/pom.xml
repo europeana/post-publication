@@ -11,7 +11,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>post-publication-web</artifactId>
+    <artifactId>post-publication-batch</artifactId>
     <description>The Web Module of the Post Publication API</description>
     <packaging>war</packaging>
 
