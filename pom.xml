@@ -45,7 +45,6 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <corelib.version>2.16.2</corelib.version>
         <metis.version>8</metis.version>
-
         <api.commons.version>0.3.17</api.commons.version>
         <springbatch.mongo.version>1.0.3</springbatch.mongo.version>
         <spring-boot.version>2.5.5</spring-boot.version>
