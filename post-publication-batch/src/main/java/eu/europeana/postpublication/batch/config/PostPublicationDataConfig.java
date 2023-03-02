@@ -43,8 +43,8 @@ public class PostPublicationDataConfig {
     @Primary
     @Bean(name = AppConstants.BEAN_BATCH_DATA_STORE)
     public Datastore batchDataStore() {
-        logger.info("Configuring Batch (reader) database: {}", settings.getBatchDatabase());
-        RecordDao recordDao = new RecordDao(MongoClients.create(settings.getMongoConnectionUrl()), settings.getBatchDatabase(), true);
+        logger.info("Configuring Batch (reader) database: {}", settings.getReadDatabase());
+        RecordDao recordDao = new RecordDao(MongoClients.create(settings.getMongoReadConnectionUrl()), settings.getReadDatabase(), true);
         recordDao.getDatastore().getMapper().mapPackage(JobExecutionEntity.class.getPackageName());
         return recordDao.getDatastore();
     }
@@ -58,8 +58,8 @@ public class PostPublicationDataConfig {
      */
     @Bean(name = AppConstants.RECORD_DAO)
     public RecordDao recordDao() {
-        logger.info("Configuring writer database: {}", settings.getWriterDatabase());
-        RecordDao recordDao = new RecordDao(MongoClients.create(settings.getMongoConnectionUrlWrite()), settings.getWriterDatabase(), true);
+        logger.info("Configuring writer database: {}", settings.getWriteDatabase());
+        RecordDao recordDao = new RecordDao(MongoClients.create(settings.getMongoWriteConnectionUrl()), settings.getWriteDatabase(), true);
         return recordDao;
     }
 

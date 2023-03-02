@@ -44,15 +44,7 @@ public class PostPublicationApp {
      * @param args main application paramaters
      */
     public static void main(String[] args) {
-        // When deploying to Cloud Foundry, this will log the instance index number, IP and GUID
-        LogManager.getLogger(PostPublicationApp.class)
-                .info("CF_INSTANCE_INDEX  = {}, CF_INSTANCE_GUID = {}, CF_INSTANCE_IP  = {}",
-                        System.getenv("CF_INSTANCE_INDEX"),
-                        System.getenv("CF_INSTANCE_GUID"),
-                        System.getenv("CF_INSTANCE_IP"));
-
         ConfigurableApplicationContext context =  SpringApplication.run(PostPublicationApp.class, args);
         System.exit(SpringApplication.exit(context));
     }
-
 }

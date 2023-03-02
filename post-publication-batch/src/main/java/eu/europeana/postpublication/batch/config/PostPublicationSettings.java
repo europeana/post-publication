@@ -15,18 +15,18 @@ public class PostPublicationSettings implements InitializingBean {
 
     private static final Logger logger = LogManager.getLogger(PostPublicationSettings.class);
 
-    @Value("${mongo.connectionUrl}")
-    private String mongoConnectionUrl;
+    @Value("${mongo.read.connectionUrl}")
+    private String mongoReadConnectionUrl;
 
-    @Value("${mongo.connectionUrl.write}")
-    private String mongoConnectionUrlWrite;
+    @Value("${mongo.write.connectionUrl}")
+    private String mongoWriteConnectionUrl;
 
-    @Value("${mongo.batch.database}")
-    private String batchDatabase;
+    @Value("${mongo.read.database}")
+    private String readDatabase;
 
 
     @Value("${mongo.writer.database}")
-    private String writerDatabase;
+    private String writeDatabase;
 
     @Value("${mongo.max.idle.time.millisec: 10000}")
     private long mongoMaxIdleTimeMillisec;
@@ -59,20 +59,20 @@ public class PostPublicationSettings implements InitializingBean {
     @Value("${pp.intervalSeconds}")
     private int ppSyncInterval;
 
-    public String getMongoConnectionUrl() {
-        return mongoConnectionUrl;
+    public String getMongoReadConnectionUrl() {
+        return mongoReadConnectionUrl;
     }
 
-    public String getMongoConnectionUrlWrite() {
-        return mongoConnectionUrlWrite;
+    public String getMongoWriteConnectionUrl() {
+        return mongoWriteConnectionUrl;
     }
 
-    public String getBatchDatabase() {
-        return batchDatabase;
+    public String getReadDatabase() {
+        return readDatabase;
     }
 
-    public String getWriterDatabase() {
-        return writerDatabase;
+    public String getWriteDatabase() {
+        return writeDatabase;
     }
 
     public long getMongoMaxIdleTimeMillisec() {
@@ -116,8 +116,8 @@ public class PostPublicationSettings implements InitializingBean {
     }
 
     private void validateRequiredSettings() {
-        if (StringUtils.equals(batchDatabase, writerDatabase)) {
-            throw new IllegalStateException("Reader and writer Database must be different. Reader dB ::" +batchDatabase + ". Writer DB :: " +writerDatabase);
+        if (StringUtils.equals(writeDatabase, readDatabase)) {
+            throw new IllegalStateException("Reader and writer Database must be different. Reader dB ::" +readDatabase + ". Writer DB :: " +writeDatabase);
         }
     }
 
