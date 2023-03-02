@@ -13,12 +13,7 @@
 
     <artifactId>post-publication-batch</artifactId>
     <description>The Web Module of the Post Publication API</description>
-    <packaging>war</packaging>
-
-    <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-    </properties>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -40,6 +35,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-tomcat</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>eu.europeana.api</groupId>
+            <artifactId>post-publication-translation</artifactId>
+            <version>0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>eu.europeana.api</groupId>

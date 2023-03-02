@@ -47,7 +47,7 @@ public class PostPublicationSettings implements InitializingBean {
     private int batchQueueSize;
 
     @Value("${batch.step.throttleLimit: 5}")
-    private int annoSyncThrottleLimit;
+    private int ppSyncThrottleLimit;
 
     @Value("${batch.retry:3}")
     private int retryLimit;
@@ -99,8 +99,8 @@ public class PostPublicationSettings implements InitializingBean {
         return batchQueueSize;
     }
 
-    public int getAnnoSyncThrottleLimit() {
-        return annoSyncThrottleLimit;
+    public int gePpSyncThrottleLimit() {
+        return ppSyncThrottleLimit;
     }
 
     public int getRetryLimit() {

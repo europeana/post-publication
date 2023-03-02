@@ -6,6 +6,9 @@ import eu.europeana.batch.entity.JobExecutionEntity;
 import eu.europeana.corelib.solr.bean.impl.FullBeanImpl;
 import eu.europeana.indexing.utils.TriConsumer;
 import eu.europeana.metis.mongo.dao.RecordDao;
+import eu.europeana.postpublication.translation.service.PangeanicV2TranslationService;
+import eu.europeana.postpublication.translation.service.RecordTranslateService;
+import eu.europeana.postpublication.translation.service.TranslationService;
 import eu.europeana.postpublication.utils.AppConstants;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -81,4 +84,23 @@ public class PostPublicationDataConfig {
     }
 
 
+    /**
+     * Translation Service bean
+     * Currently for Post publication pipeline only Pangeanic
+     * Translation Engine is required
+     * @return
+     */
+    @Bean(name = AppConstants.TRANSLATION_SERVICE_BEAN)
+    public TranslationService translationService() {
+        return new PangeanicV2TranslationService();
+    }
+
+    /**
+     * RecordTranslateService bean
+     * @return
+     */
+    @Bean(name = AppConstants.RECORD_TRANSLATION_SERVICE_BEAN)
+    public RecordTranslateService recordTranslateService() {
+        return new RecordTranslateService(translationService());
+    }
 }

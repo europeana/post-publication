@@ -112,7 +112,7 @@ public class PostPublicationJobConfig {
                 .skipLimit(postPublicationSettings.getBatchSkipLimit())
                 .skip(Exception.class)
                 .taskExecutor(postPublicationTaskExecutor)
-                .throttleLimit(postPublicationSettings.getAnnoSyncThrottleLimit())
+                .throttleLimit(postPublicationSettings.gePpSyncThrottleLimit())
                 .build();
     }
 

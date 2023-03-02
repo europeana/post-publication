@@ -3,6 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <modules>
         <module>post-publication-batch</module>
+        <module>post-publication-translation</module>
     </modules>
 
     <parent>
@@ -46,9 +47,9 @@
         <corelib.version>2.16.2</corelib.version>
         <metis.version>8</metis.version>
         <api.commons.version>0.3.17</api.commons.version>
+        <httpclient.version>4.5.13</httpclient.version>
         <springbatch.mongo.version>1.0.3</springbatch.mongo.version>
         <spring-boot.version>2.5.5</spring-boot.version>
-        <git-code-format.version>3.1</git-code-format.version>
         <git-commit-id.version>5.0.0</git-commit-id.version>
         <springdoc.version>1.6.13</springdoc.version>
 
