@@ -62,7 +62,7 @@ public class LanguageDetectionService {
      * Gather all non-language tagged values (for all whitelisted properties) of the (non-Europeana) Proxies
      * NOTE :: Only if there isn't a language tagged value already spelled exactly the same
      *
-     * Run through language detection (ie. call lang detect method) and assign (or correct) language attributes for the proxy
+     * Run through language detection (ie. call lang detect method) and assign (or correct) language attributes for the values
      *
      * Responses indicating that the language is not supported or the inability to recognise the language should
      * retain the language attribute provided in the source
