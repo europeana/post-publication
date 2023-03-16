@@ -56,8 +56,6 @@ public class LanguageDetectionUtils {
         List<String> valueToDetect = new ArrayList<>();
         if (entity != null) {
             Map<String, List<String>> map = entity.getPrefLabel();
-
-            System.out.println(" preflabel map for "+  entity.getAbout() + " --- " +map);
             if (!map.isEmpty() && !map.keySet().isEmpty()) {
                 // if preflabel is present in other languages than "def" then do nothing
                 if (!map.isEmpty() && !map.keySet().isEmpty() && mapHasOtherLanguagesThanDef(map.keySet())) {
@@ -143,7 +141,6 @@ public class LanguageDetectionUtils {
                         textPerField++;
                     }
                 }
-                System.out.println(languageValueFieldMap.getFieldName() + "  --- " + textPerField);
                 textsPerField.put(languageValueFieldMap.getFieldName(), textPerField);
             }
         }
@@ -180,7 +177,6 @@ public class LanguageDetectionUtils {
             // add the new map for the field
             correctLangMap.add(new LanguageValueFieldMap(entry.getKey(), newValueMap));
         }
-        System.out.println(correctLangMap);
         return correctLangMap;
     }
 

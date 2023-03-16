@@ -21,12 +21,11 @@ public class LanguageDetectionService {
     private static final Logger LOG = LogManager.getLogger(LanguageDetectionService.class);
 
     // TODO check thgis field value in DB dctermsTableOfContents
-//    private static final Set<String> INCLUDE_PROXY_MAP_FIELDS = Set.of("dcContributor", "dcCoverage", "dcCreator", "dcDate", "dcDescription", "dcFormat", "dcIdentifier",
-//            "dcLanguage", "dcPublisher", "dcRelation", "dcRights", "dcSource", "dcSubject", "dcTitle", "dcType", "dctermsAlternative", "dctermsConformsTo", "dctermsCreated",
-//            "dctermsExtent", "dctermsHasFormat", "dctermsHasPart", "dctermsHasVersion", "dctermsIsFormatOf", "dctermsIsPartOf", "dctermsIsReferencedBy", "dctermsIsReplacedBy",
-//            "dctermsIsRequiredBy", "dctermsIssued", "dctermsIsVersionOf", "dctermsMedium", "dctermsProvenance", "dctermsReferences", "dctermsReplaces", "dctermsRequires",
-//            "dctermsSpatial", "dctermsTableOfContents", "dctermsTemporal", "edmCurrentLocation", "edmHasMet", "edmHasType", "edmIsRelatedTo", "edmType");
-    private static final Set<String> INCLUDE_PROXY_MAP_FIELDS = Set.of("dcCreator", "dcDescription");
+    private static final Set<String> INCLUDE_PROXY_MAP_FIELDS = Set.of("dcContributor", "dcCoverage", "dcCreator", "dcDate", "dcDescription", "dcFormat", "dcIdentifier",
+            "dcLanguage", "dcPublisher", "dcRelation", "dcRights", "dcSource", "dcSubject", "dcTitle", "dcType", "dctermsAlternative", "dctermsConformsTo", "dctermsCreated",
+            "dctermsExtent", "dctermsHasFormat", "dctermsHasPart", "dctermsHasVersion", "dctermsIsFormatOf", "dctermsIsPartOf", "dctermsIsReferencedBy", "dctermsIsReplacedBy",
+            "dctermsIsRequiredBy", "dctermsIssued", "dctermsIsVersionOf", "dctermsMedium", "dctermsProvenance", "dctermsReferences", "dctermsReplaces", "dctermsRequires",
+            "dctermsSpatial", "dctermsTableOfContents", "dctermsTemporal", "edmCurrentLocation", "edmHasMet", "edmHasType", "edmIsRelatedTo", "edmType");
 
     private final TranslationService detectionService;
 
@@ -107,30 +106,22 @@ public class LanguageDetectionService {
             }, proxyFieldFilter);
             LOG.debug("Gathered {} fields non-language tagged values for record {} and proxy {}", langValueFieldMapForDetection.size(), bean.getAbout(), proxy.getAbout());
 
-            System.out.println(langValueFieldMapForDetection);
             Map<String, Integer> textsPerField = new HashMap<>();
             List<String> textsForDetection = new ArrayList<>();
 
             // 3. collect all the values in one list for single lang-detection request per proxy
             LanguageDetectionUtils.getTextsForDetectionRequest(bean, textsForDetection, textsPerField, langValueFieldMapForDetection);
 
-            System.out.println("textsForDetection :: "+ textsForDetection);
-            System.out.println("textsPerField :: "+ textsPerField);
-
             // 4. send lang-detect request
             List<String> detectedLanguages= detectionService.detectLang(textsForDetection, langHint);
             LOG.debug("Detected languages - {} ", detectedLanguages);
 
-            System.out.println("Detected languages - "+detectedLanguages);
             //5. assign language attributes to the values
             List<LanguageValueFieldMap> correctLangValueMap = LanguageDetectionUtils.getLangDetectedFieldValueMap(textsPerField, detectedLanguages, textsForDetection);
 
-            // add all the new language tagged values to europeana proxy
+            // 6. add all the new language tagged values to europeana proxy
             Proxy europeanProxy = bean.getProxies().get(0);
             updateProxy(europeanProxy, correctLangValueMap); // add the new lang-value map for europeana proxy
-            System.out.println(europeanProxy.getDcCreator());
-            System.out.println(europeanProxy.getDcDescription());
-
         }
         return bean;
     }
