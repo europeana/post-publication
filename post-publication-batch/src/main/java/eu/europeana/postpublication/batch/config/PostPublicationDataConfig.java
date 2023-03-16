@@ -7,6 +7,7 @@ import eu.europeana.corelib.solr.bean.impl.FullBeanImpl;
 import eu.europeana.indexing.utils.TriConsumer;
 import eu.europeana.metis.mongo.dao.RecordDao;
 import eu.europeana.postpublication.translation.service.PangeanicV2TranslationService;
+import eu.europeana.postpublication.translation.service.LanguageDetectionService;
 import eu.europeana.postpublication.translation.service.RecordTranslateService;
 import eu.europeana.postpublication.translation.service.TranslationService;
 import eu.europeana.postpublication.utils.AppConstants;
@@ -93,6 +94,15 @@ public class PostPublicationDataConfig {
     @Bean(name = AppConstants.TRANSLATION_SERVICE_BEAN)
     public TranslationService translationService() {
         return new PangeanicV2TranslationService();
+    }
+
+    /**
+     * RecordTranslateService bean
+     * @return
+     */
+    @Bean(name = AppConstants.LANGUAGE_DETECTION_SERVICE_BEAN)
+    public LanguageDetectionService languageDetectionService() {
+        return new LanguageDetectionService(translationService());
     }
 
     /**

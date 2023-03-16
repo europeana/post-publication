@@ -43,39 +43,8 @@ public class RecordTranslateService {
         this.translationService = translationService;
     }
 
-    /**
-     * Returns the default language list of the edm:languages
-     * NOTE : For region locales values, if present in edm:languages
-     * the first two ISO letters will be picked up.
-     *
-     * Only returns the supported official languages,See: {@link Language}
-     * Default translation and filtering for non-official language
-     * is not supported
-     *
-     * @param bean the fullbean to inspect
-     * @return the default language as specified in Europeana Aggregation edmLanguage field (if the language found there
-     * is one of the EU languages we support in this application for translation)
-     */
-    public List<Language> getDefaultTranslationLanguage(FullBean bean) {
-        List<Language> lang = new ArrayList<>();
-        Map<String,List<String>> edmLanguage = bean.getEuropeanaAggregation().getEdmLanguage();
-        for (Map.Entry<String, List<String>> entry : edmLanguage.entrySet()) {
-            for (String languageAbbreviation : entry.getValue()) {
-                if (Language.isSupported(languageAbbreviation)) {
-                    lang.add(Language.getLanguage(languageAbbreviation));
-                } else {
-                    LOG.warn("edm:language '{}' is not supported for default translation and filtering ", languageAbbreviation);
-                }
-            }
-        }
-        if (!lang.isEmpty()) {
-            LOG.debug("Default translation and filtering applied for language : {} ", lang);
-        }
-        return lang;
-    }
-
     private Language getHintForLangDetect(FullBean bean) {
-        List<Language> defaultTranslationLanguage = getDefaultTranslationLanguage(bean);
+        List<Language> defaultTranslationLanguage = TranslationUtils.getEdmLanguage(bean);
         if (!defaultTranslationLanguage.isEmpty()) {
             return defaultTranslationLanguage.get(0);
         }
@@ -113,16 +82,18 @@ public class RecordTranslateService {
         long startTimeTranslate = System.currentTimeMillis();
 
         // edmLanguage is passed a hint for Pageanic translations
-        Language edmLang = null ;
+        String langHint = null ;
         if (translationService.getClass().equals(PangeanicV2TranslationService.class)) {
-            edmLang = getHintForLangDetect(bean);
+            Language edmLang = getHintForLangDetect(bean);
+            langHint = (edmLang != null ? edmLang.name().toLowerCase(Locale.ROOT) : null);
+
         }
 
         if(!textsToTranslate.isEmpty()) {
             LOG.info("Translate - record {}", bean.getAbout());
         }
 
-        FieldValuesLanguageMap translations = textsToTranslate.translate(translationService, targetLang, edmLang);
+        FieldValuesLanguageMap translations = textsToTranslate.translate(translationService, targetLang, langHint);
         if (LOG.isDebugEnabled()) {
             LOG.debug("Translate - Send/receive translation request took {} ms", (System.currentTimeMillis() - startTimeTranslate));
         }

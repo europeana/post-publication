@@ -43,6 +43,7 @@ public class FullBeanPublisher extends FullBeanUpdater {
             for (FullBean record : recordList) {
                 // TODO test if something goes wrong here while saving do we still add the saved Full bean about ID,
                 //  That should not be added in the record updates list
+                //  ALSO see how the dates will be saved
                 FullBeanImpl savedFullBean = new FullBeanUpdater(fullBeanPreprocessor).update((FullBeanImpl) record, null,
                         record.getTimestampCreated(), edmMongoClient);
                 recordUpdates.add(savedFullBean.getAbout());

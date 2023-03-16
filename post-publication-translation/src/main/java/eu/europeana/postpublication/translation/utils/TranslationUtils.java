@@ -1,5 +1,6 @@
 package eu.europeana.postpublication.translation.utils;
 
+import eu.europeana.corelib.definitions.edm.beans.FullBean;
 import eu.europeana.corelib.utils.ComparatorUtils;
 import eu.europeana.postpublication.translation.exception.TranslationException;
 import eu.europeana.postpublication.translation.model.Language;
@@ -37,7 +38,7 @@ public final class TranslationUtils {
      * @throws eu.europeana.postpublication.translation.exception.TranslationException when there is a problem sending/retrieving translation data
      */
     public static FieldValuesLanguageMap translate(TranslationService translationService, FieldValuesLanguageMap toTranslate,
-                                                   String targetLanguage, Language edmLang) throws TranslationException {
+                                                   String targetLanguage, String langHint) throws TranslationException {
         // We don't use delimiters because we want to keep the number of characters we sent low.
         // Instead we use line counts to determine start and end of a field.
         Map<String, Integer> linesPerField = new LinkedHashMap<>();
@@ -56,7 +57,7 @@ public final class TranslationUtils {
         try {
             if (Language.DEF.equals(toTranslate.getSourceLanguage())) {
                 LOG.debug("Sending translate query with language detect...");
-                translations = translationService.translate(linesToTranslate, targetLanguage, edmLang);
+                translations = translationService.translateAndDetect(linesToTranslate, targetLanguage, langHint);
             } else {
                 LOG.debug("Sending translate query with source language {} and target language {}...", toTranslate.getSourceLanguage(), targetLanguage);
                 translations = translationService.translate(linesToTranslate, targetLanguage, toTranslate.getSourceLanguage());
@@ -200,4 +201,39 @@ public final class TranslationUtils {
             LOG.warn("Error reading fieldName {}. Unable to add translation for it.", fieldName, e);
         }
     }
+
+
+    /**
+     * Returns the default language list of the edm:languages
+     * NOTE : For region locales values, if present in edm:languages
+     * the first two ISO letters will be picked up.
+     * <p>
+     * Only returns the supported official languages,See: {@link Language}
+     * Default translation and filtering for non-official language
+     * is not supported
+     *
+     * @param bean the fullbean to inspect
+     * @return the default language as specified in Europeana Aggregation edmLanguage field (if the language found there
+     * is one of the EU languages we support in this application for translation)
+     */
+    public static List<Language> getEdmLanguage(FullBean bean) {
+        List<Language> lang = new ArrayList<>();
+        Map<String, List<String>> edmLanguage = bean.getEuropeanaAggregation().getEdmLanguage();
+        for (Map.Entry<String, List<String>> entry : edmLanguage.entrySet()) {
+            for (String languageAbbreviation : entry.getValue()) {
+                if (Language.isSupported(languageAbbreviation)) {
+                    lang.add(Language.getLanguage(languageAbbreviation));
+                } else {
+                    LOG.warn("edm:language '{}' is not supported", languageAbbreviation);
+                }
+            }
+        }
+        if (!lang.isEmpty()) {
+            LOG.debug("Default translation and filtering applied for language : {} ", lang);
+        }
+        return lang;
+    }
+
+
+
 }
