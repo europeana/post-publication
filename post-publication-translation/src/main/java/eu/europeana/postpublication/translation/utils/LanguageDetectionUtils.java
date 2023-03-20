@@ -23,6 +23,7 @@ public class LanguageDetectionUtils {
     private LanguageDetectionUtils() {
 
     }
+
     /**
      * Function to get the lang-value map of the field from the proxy Object
      * @param proxy
@@ -40,7 +41,7 @@ public class LanguageDetectionUtils {
             }
             if (value instanceof Map) {
                 return (Map<String, List<String>>) value;
-            } else if (value != null) { // should not happen as the whitelisted values are all map
+            } else if (value != null) { // should not happen as the whitelisted values are all lang-map
                 LOG.warn("Unexpected data - field {} did not return a map", e);
             }
             return new LinkedHashMap<>(); // default return an empty map
@@ -53,7 +54,7 @@ public class LanguageDetectionUtils {
      * @return
      */
     public static List<String> getPrefLabelofEntity(ContextualClass entity) {
-        List<String> valueToDetect = new ArrayList<>();
+        List<String> prefLabels = new ArrayList<>();
         if (entity != null) {
             Map<String, List<String>> map = entity.getPrefLabel();
             if (!map.isEmpty() && !map.keySet().isEmpty()) {
@@ -61,11 +62,11 @@ public class LanguageDetectionUtils {
                 if (!map.isEmpty() && !map.keySet().isEmpty() && mapHasOtherLanguagesThanDef(map.keySet())) {
                     LOG.debug("Entity {} already has language tagged values", entity.getAbout());
                 } else { // pick the def value
-                    valueToDetect.addAll(map.get(Language.DEF));
+                    prefLabels.addAll(map.get(Language.DEF));
                 }
             }
         }
-        return valueToDetect;
+        return prefLabels;
     }
 
     /**

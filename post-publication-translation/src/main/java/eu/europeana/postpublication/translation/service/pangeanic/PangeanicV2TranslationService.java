@@ -1,7 +1,8 @@
-package eu.europeana.postpublication.translation.service;
+package eu.europeana.postpublication.translation.service.pangeanic;
 
 import eu.europeana.postpublication.translation.exception.TranslationException;
 import eu.europeana.postpublication.translation.model.Language;
+import eu.europeana.postpublication.translation.service.TranslationService;
 import eu.europeana.postpublication.translation.utils.PangeanicTranslationUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -31,42 +32,14 @@ import java.util.*;
 @Service
 @PropertySource("classpath:post-publication.properties")
 @PropertySource(value = "classpath:post-publication.user.properties", ignoreResourceNotFound = true)
-public class PangeanicV2TranslationService implements TranslationService  {
+public class PangeanicV2TranslationService implements TranslationService {
 
-    private static final Logger LOG = LogManager.getLogger(PangeanicV2TranslationService.class);
+    protected static final Logger LOG = LogManager.getLogger(PangeanicV2TranslationService.class);
 
     @Value("${translation.pangeanic.endpoint.translate:}")
-    private String translateEndpoint;
+    protected String translateEndpoint;
 
-    @Value("${translation.pangeanic.endpoint.detect:}")
-    private String detectEndpoint;
-
-    private CloseableHttpClient translateClient;
-
-    // ONLY for testing purpose
-    public String getTranslateEndpoint() {
-        return translateEndpoint;
-    }
-
-    public void setTranslateEndpoint(String translateEndpoint) {
-        this.translateEndpoint = translateEndpoint;
-    }
-
-    public String getDetectEndpoint() {
-        return detectEndpoint;
-    }
-
-    public void setDetectEndpoint(String detectEndpoint) {
-        this.detectEndpoint = detectEndpoint;
-    }
-
-    public CloseableHttpClient getTranslateClient() {
-        return translateClient;
-    }
-
-    public void setTranslateClient(CloseableHttpClient translateClient) {
-        this.translateClient = translateClient;
-    }
+    protected CloseableHttpClient translateClient;
 
     /**
      * Creates a new client that can send translation requests to Google Cloud Translate. Note that the client needs
@@ -80,7 +53,7 @@ public class PangeanicV2TranslationService implements TranslationService  {
         cm.setMaxTotal(PangeanicTranslationUtils.MAX_CONNECTIONS);
         cm.setDefaultMaxPerRoute(PangeanicTranslationUtils.MAX_CONNECTIONS_PER_ROUTE);
         translateClient = HttpClients.custom().setConnectionManager(cm).build();
-        LOG.info("Pangeanic translation service is initialized. Translate Endpoint is {}. Detect language Endpoint is {}", translateEndpoint, detectEndpoint);
+        LOG.info("Pangeanic translation service is initialized with translate Endpoint - {}", translateEndpoint);
     }
 
     // TODO logic yet to be identified, for now return true for every pair
@@ -89,19 +62,14 @@ public class PangeanicV2TranslationService implements TranslationService  {
         return true;
     }
 
-    @Override
-    public List<String> detectLang(List<String> texts, String langHint) throws TranslationException {
-        try {
-            HttpPost post = PangeanicTranslationUtils.createDetectlanguageRequest(detectEndpoint, texts, langHint, "");
-            return sendDetectRequestAndParse(post);
-        } catch (JSONException | IOException e) {
-            throw new TranslationException(e.getMessage());
-        }
-    }
 
     @Override
-    public List<String> translate(List<String> texts, String targetLanguage, String sourceLanguage) throws TranslationException {
+    public List<String> translate(List<String> texts, String targetLanguage, String sourceLanguage, boolean detect) throws TranslationException {
         try {
+            if (detect) {
+                // in this case source language is the hint
+                return translateWithLangDetect(texts, targetLanguage, sourceLanguage);
+            }
             HttpPost post = PangeanicTranslationUtils.createTranslateRequest(translateEndpoint, texts, targetLanguage, sourceLanguage, "" );
             return PangeanicTranslationUtils.getResults(texts, sendTranslateRequestAndParse(post), false);
         } catch (JSONException|IOException e) {
@@ -109,10 +77,6 @@ public class PangeanicV2TranslationService implements TranslationService  {
         }
     }
 
-    @Override
-    public List<String> translateAndDetect(List<String> texts, String targetLanguage, String langHint) throws TranslationException {
-        return translateWithDetctedLanguages(texts, targetLanguage, langHint);
-    }
 
     /**
      * Translates the texts with no source language.
@@ -124,9 +88,10 @@ public class PangeanicV2TranslationService implements TranslationService  {
      * @return
      * @throws TranslationException
      */
-    private List<String> translateWithDetctedLanguages(List<String> texts, String targetLanguage, String langHint) throws TranslationException {
+    private List<String> translateWithLangDetect(List<String> texts, String targetLanguage, String langHint) throws TranslationException {
         try {
-            List<String> detectedLanguages = detectLang(texts, langHint);
+            PangeanicV2LangDetectService detectService = new PangeanicV2LangDetectService();
+            List<String> detectedLanguages = detectService.detectLang(texts, langHint);
             // create lang-value map for translation
             Map<String, List<String>> detectedLangValueMap = PangeanicTranslationUtils.getDetectedLangValueMap(texts, detectedLanguages);
             LOG.debug("Pangeanic detect lang request with hint {} is executed. Detected languages are {} ", langHint, detectedLangValueMap.keySet());
@@ -177,37 +142,6 @@ public class PangeanicV2TranslationService implements TranslationService  {
                     throw new TranslationException("Translation failed for source language - " +obj.get(PangeanicTranslationUtils.SOURCE_LANG));
                 }
                 return  results;
-            }
-        }
-    }
-
-    // TODO score logic still pending
-    public List<String> sendDetectRequestAndParse(HttpPost post) throws IOException, JSONException, TranslationException {
-        try (CloseableHttpResponse response = translateClient.execute(post)) {
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                throw new IOException("Error from Pangeanic Translation API: " +
-                        response.getStatusLine().getStatusCode() + " - " + response.getStatusLine().getReasonPhrase());
-            } else {
-                String json = EntityUtils.toString(response.getEntity());
-                // sometimes language detect sends 200 ok status with empty response data
-                if (json.isEmpty()) {
-                    throw new TranslationException("Language detect returned an empty response");
-                }
-                JSONObject obj = new JSONObject(json);
-                List<String> result = new ArrayList<>();
-                JSONArray detectedLangs = obj.getJSONArray(PangeanicTranslationUtils.DETECTED_LANGUAGE);
-                for (int i = 0; i < detectedLangs.length(); i++) {
-                    JSONObject object = (JSONObject) detectedLangs.get(i);
-                    if (object.has(PangeanicTranslationUtils.SOURCE_DETECTED)) {
-                        result.add(object.getString(PangeanicTranslationUtils.SOURCE_DETECTED));
-                    } else {
-                        // when no detected lang is returned. Ideally, this should not happen
-                        // But there are time Pangeanic returns no src_detected value
-                        // These values as well will remain non-translated
-                        result.add(null);
-                    }
-                }
-                return result;
             }
         }
     }

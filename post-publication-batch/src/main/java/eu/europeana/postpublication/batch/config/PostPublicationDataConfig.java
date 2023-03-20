@@ -6,9 +6,11 @@ import eu.europeana.batch.entity.JobExecutionEntity;
 import eu.europeana.corelib.solr.bean.impl.FullBeanImpl;
 import eu.europeana.indexing.utils.TriConsumer;
 import eu.europeana.metis.mongo.dao.RecordDao;
-import eu.europeana.postpublication.translation.service.PangeanicV2TranslationService;
 import eu.europeana.postpublication.translation.service.LanguageDetectionService;
-import eu.europeana.postpublication.translation.service.RecordTranslateService;
+import eu.europeana.postpublication.translation.service.pangeanic.PangeanicV2LangDetectService;
+import eu.europeana.postpublication.translation.service.pangeanic.PangeanicV2TranslationService;
+import eu.europeana.postpublication.translation.service.impl.RecordLangDetectionService;
+import eu.europeana.postpublication.translation.service.impl.RecordTranslateService;
 import eu.europeana.postpublication.translation.service.TranslationService;
 import eu.europeana.postpublication.utils.AppConstants;
 import org.apache.commons.lang3.tuple.Pair;
@@ -97,12 +99,22 @@ public class PostPublicationDataConfig {
     }
 
     /**
+     * lang Detection Service bean
+     * Currently for Post publication pipeline only Pangeanic
+     * @return
+     */
+    @Bean(name = AppConstants.TRANSLATION_SERVICE_BEAN)
+    public LanguageDetectionService detectionService() {
+        return new PangeanicV2LangDetectService();
+    }
+
+    /**
      * RecordTranslateService bean
      * @return
      */
     @Bean(name = AppConstants.LANGUAGE_DETECTION_SERVICE_BEAN)
-    public LanguageDetectionService languageDetectionService() {
-        return new LanguageDetectionService(translationService());
+    public RecordLangDetectionService languageDetectionService() {
+        return new RecordLangDetectionService(detectionService());
     }
 
     /**

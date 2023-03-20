@@ -1,7 +1,6 @@
 package eu.europeana.postpublication.translation.utils;
 
 import eu.europeana.postpublication.translation.model.Language;
-import eu.europeana.postpublication.translation.service.PangeanicV2TranslationService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;

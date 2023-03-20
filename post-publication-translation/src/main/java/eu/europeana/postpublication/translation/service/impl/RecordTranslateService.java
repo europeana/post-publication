@@ -1,4 +1,4 @@
-package eu.europeana.postpublication.translation.service;
+package eu.europeana.postpublication.translation.service.impl;
 
 import eu.europeana.api.commons.error.EuropeanaApiException;
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
@@ -8,6 +8,8 @@ import eu.europeana.corelib.utils.EuropeanaUriUtils;
 import eu.europeana.postpublication.translation.model.FieldValuesLanguageMap;
 import eu.europeana.postpublication.translation.model.Language;
 import eu.europeana.postpublication.translation.model.TranslationsMap;
+import eu.europeana.postpublication.translation.service.TranslationService;
+import eu.europeana.postpublication.translation.service.pangeanic.PangeanicV2TranslationService;
 import eu.europeana.postpublication.translation.utils.TranslationUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;

@@ -57,10 +57,10 @@ public final class TranslationUtils {
         try {
             if (Language.DEF.equals(toTranslate.getSourceLanguage())) {
                 LOG.debug("Sending translate query with language detect...");
-                translations = translationService.translateAndDetect(linesToTranslate, targetLanguage, langHint);
+                translations = translationService.translate(linesToTranslate, targetLanguage, langHint, true);
             } else {
                 LOG.debug("Sending translate query with source language {} and target language {}...", toTranslate.getSourceLanguage(), targetLanguage);
-                translations = translationService.translate(linesToTranslate, targetLanguage, toTranslate.getSourceLanguage());
+                translations = translationService.translate(linesToTranslate, targetLanguage, toTranslate.getSourceLanguage(), false);
             }
         }
         // TODO this is not needed anymore as we are not doing Gog;e translation but identify what other exceptions can be thrown
