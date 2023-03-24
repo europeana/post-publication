@@ -6,7 +6,6 @@ import eu.europeana.corelib.definitions.edm.entity.Proxy;
 import eu.europeana.postpublication.translation.model.*;
 import eu.europeana.postpublication.translation.service.LanguageDetectionService;
 import eu.europeana.postpublication.translation.utils.LanguageDetectionUtils;
-import eu.europeana.postpublication.translation.utils.TranslationUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,16 +16,9 @@ import java.lang.reflect.Field;
 import java.util.*;
 
 @Service
-public class RecordLangDetectionService {
+public class RecordLangDetectionService extends BaseRecordService {
 
     private static final Logger LOG = LogManager.getLogger(RecordLangDetectionService.class);
-
-    // TODO check thgis field value in DB dctermsTableOfContents
-    private static final Set<String> INCLUDE_PROXY_MAP_FIELDS = Set.of("dcContributor", "dcCoverage", "dcCreator", "dcDate", "dcDescription", "dcFormat", "dcIdentifier",
-            "dcLanguage", "dcPublisher", "dcRelation", "dcRights", "dcSource", "dcSubject", "dcTitle", "dcType", "dctermsAlternative", "dctermsConformsTo", "dctermsCreated",
-            "dctermsExtent", "dctermsHasFormat", "dctermsHasPart", "dctermsHasVersion", "dctermsIsFormatOf", "dctermsIsPartOf", "dctermsIsReferencedBy", "dctermsIsReplacedBy",
-            "dctermsIsRequiredBy", "dctermsIssued", "dctermsIsVersionOf", "dctermsMedium", "dctermsProvenance", "dctermsReferences", "dctermsReplaces", "dctermsRequires",
-            "dctermsSpatial", "dctermsTableOfContents", "dctermsTemporal", "edmCurrentLocation", "edmHasMet", "edmHasType", "edmIsRelatedTo", "edmType");
 
     private final LanguageDetectionService detectionService;
 
@@ -39,7 +31,6 @@ public class RecordLangDetectionService {
         this.detectionService = detectionService;
     }
 
-
     /**
      * If does not match any of the languages Europeana supports or
      * if not supported by the language detection endpoint (ie. calling the isSupported method)
@@ -49,10 +40,10 @@ public class RecordLangDetectionService {
      * @return
      */
     private String getHintForLanguageDetect(FullBean bean) {
-        List<Language> edmLanguages = TranslationUtils.getEdmLanguage(bean);
+        List<Language> edmLanguages = LanguageDetectionUtils.getEdmLanguage(bean);
         if (!edmLanguages.isEmpty()) {
             String edmLang = edmLanguages.get(0).name().toLowerCase(Locale.ROOT);
-            if(detectionService.isSupported(edmLang)) {
+            if (detectionService.isSupported(edmLang)) {
                 return edmLang;
             }
         }
@@ -90,31 +81,28 @@ public class RecordLangDetectionService {
             return bean;
         }
 
-        // 1. whitelisted properties filter
-        ReflectionUtils.FieldFilter proxyFieldFilter = field -> field.getType().isAssignableFrom(Map.class) &&
-                INCLUDE_PROXY_MAP_FIELDS.contains(field.getName());
-
+        // 1. gather all the "def" values for the whitelisted fields
         for (Proxy proxy : proxies) {
-            // 2. gather all the "def" values for the whitelisted fields
             List<LanguageValueFieldMap> langValueFieldMapForDetection = new ArrayList<>();
 
             ReflectionUtils.doWithFields(proxy.getClass(), field -> {
-                LanguageValueFieldMap fieldValuesLanguageMap = getProxyFieldsValues(proxy, field);
+                LanguageValueFieldMap fieldValuesLanguageMap = getProxyFieldsValues(proxy, field, bean);
                 if (fieldValuesLanguageMap != null) {
                     langValueFieldMapForDetection.add(fieldValuesLanguageMap);
                 }
 
             }, proxyFieldFilter);
+
             LOG.debug("Gathered {} fields non-language tagged values for record {} and proxy {}", langValueFieldMapForDetection.size(), bean.getAbout(), proxy.getAbout());
 
             Map<String, Integer> textsPerField = new HashMap<>();
             List<String> textsForDetection = new ArrayList<>();
 
             // 3. collect all the values in one list for single lang-detection request per proxy
-            LanguageDetectionUtils.getTextsForDetectionRequest(bean, textsForDetection, textsPerField, langValueFieldMapForDetection);
+            LanguageDetectionUtils.getTextsForDetectionRequest(textsForDetection, textsPerField, langValueFieldMapForDetection);
 
             // 4. send lang-detect request
-            List<String> detectedLanguages= detectionService.detectLang(textsForDetection, langHint);
+            List<String> detectedLanguages = detectionService.detectLang(textsForDetection, langHint);
             LOG.debug("Detected languages - {} ", detectedLanguages);
 
             //5. assign language attributes to the values
@@ -123,14 +111,13 @@ public class RecordLangDetectionService {
             // 6. add all the new language tagged values to europeana proxy
             Proxy europeanProxy = bean.getProxies().get(0);
             updateProxy(europeanProxy, correctLangValueMap); // add the new lang-value map for europeana proxy
-
         }
         return bean;
     }
 
-    private LanguageValueFieldMap getProxyFieldsValues(Proxy proxy, Field field) {
-         HashMap<String, List<String>> origFieldData = (HashMap<String, List<String>>) LanguageDetectionUtils.getValueOfTheField(proxy).apply(field.getName());
-         return LanguageDetectionUtils.getValueFromLanguageMap(SerializationUtils.clone(origFieldData), field.getName());
+    private LanguageValueFieldMap getProxyFieldsValues(Proxy proxy, Field field, FullBean bean) {
+         HashMap<String, List<String>> origFieldData = (HashMap<String, List<String>>) getValueOfTheField(proxy).apply(field.getName());
+         return LanguageDetectionUtils.getValueFromLanguageMap(SerializationUtils.clone(origFieldData), field.getName(), bean);
     }
 
     /**
@@ -140,9 +127,9 @@ public class RecordLangDetectionService {
      */
     private void updateProxy( Proxy proxy, List<LanguageValueFieldMap> correctLangMap) {
         correctLangMap.stream().forEach(value -> {
-            Map<String, List<String>> map = LanguageDetectionUtils.getValueOfTheField(proxy).apply(value.getFieldName());
+            Map<String, List<String>> map = getValueOfTheField(proxy).apply(value.getFieldName());
 
-            //2. Now add the new lang-value map in the proxy
+            // Now add the new lang-value map in the proxy
             for (Map.Entry<String, List<String>> entry : value.entrySet()) {
                 if (map.containsKey(entry.getKey())) {
                     map.get(entry.getKey()).addAll(entry.getValue());

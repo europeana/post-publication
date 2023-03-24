@@ -1,52 +1,56 @@
 package eu.europeana.postpublication.translation.utils;
 
+import eu.europeana.api.commons.definitions.utils.ComparatorUtils;
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
 import eu.europeana.corelib.definitions.edm.entity.ContextualClass;
-import eu.europeana.corelib.definitions.edm.entity.Proxy;
 import eu.europeana.corelib.utils.EuropeanaUriUtils;
 import eu.europeana.postpublication.translation.model.Language;
 import eu.europeana.postpublication.translation.model.LanguageValueFieldMap;
-import org.apache.commons.lang3.StringUtils;
+import eu.europeana.postpublication.translation.service.impl.BaseRecordService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.util.ReflectionUtils;
 
-import java.lang.reflect.Field;
 import java.util.*;
-import java.util.function.Function;
 
 public class LanguageDetectionUtils {
 
     private static final Logger LOG = LogManager.getLogger(LanguageDetectionUtils.class);
-    private static final List<String> ENTITIES = List.of("agents", "concepts", "places", "timespans");
 
     private LanguageDetectionUtils() {
 
     }
 
     /**
-     * Function to get the lang-value map of the field from the proxy Object
-     * @param proxy
-     * @return
+     * Returns the default language list of the edm:languages
+     * NOTE : For region locales values, if present in edm:languages
+     * the first two ISO letters will be picked up.
+     * <p>
+     * Only returns the supported official languages,See: {@link Language}
+     * Default translation and filtering for non-official language
+     * is not supported
+     *
+     * @param bean the fullbean to inspect
+     * @return the default language as specified in Europeana Aggregation edmLanguage field (if the language found there
+     * is one of the EU languages we support in this application for translation)
      */
-    public static Function<String, Map<String, List<String>>> getValueOfTheField(Proxy proxy) {
-        return e -> {
-            Field field = ReflectionUtils.findField(proxy.getClass(), e);
-            ReflectionUtils.makeAccessible(field);
-            Object value = ReflectionUtils.getField(field, proxy);
-            // if the field doesn't exist, set an empty map in the proxy object
-            if (value == null) {
-                ReflectionUtils.setField(field, proxy, new LinkedHashMap<>());
-                value = ReflectionUtils.getField(field, proxy);
+    public static List<Language> getEdmLanguage(FullBean bean) {
+        List<Language> lang = new ArrayList<>();
+        Map<String, List<String>> edmLanguage = bean.getEuropeanaAggregation().getEdmLanguage();
+        for (Map.Entry<String, List<String>> entry : edmLanguage.entrySet()) {
+            for (String languageAbbreviation : entry.getValue()) {
+                if (Language.isSupported(languageAbbreviation)) {
+                    lang.add(Language.getLanguage(languageAbbreviation));
+                } else {
+                    LOG.warn("edm:language '{}' is not supported", languageAbbreviation);
+                }
             }
-            if (value instanceof Map) {
-                return (Map<String, List<String>>) value;
-            } else if (value != null) { // should not happen as the whitelisted values are all lang-map
-                LOG.warn("Unexpected data - field {} did not return a map", e);
-            }
-            return new LinkedHashMap<>(); // default return an empty map
-        };
+        }
+        if (!lang.isEmpty()) {
+            LOG.debug("Default translation and filtering applied for language : {} ", lang);
+        }
+        return lang;
     }
+
 
     /**
      * Method to get values of non-language tagged prefLabel (only if no other language tagged value doesn't exists)
@@ -70,79 +74,19 @@ public class LanguageDetectionUtils {
     }
 
     /**
-     * Finds the Contextual entity from the bean matching the uri
-     * @param bean record
-     * @param uri url to check
-     * @return
-     */
-    public static ContextualClass entityExistsWithUrl(FullBean bean, String uri) {
-        List<ContextualClass> matchingEntity= new ArrayList<>();
-
-        // check only entity objects
-        ReflectionUtils.FieldFilter entityFilter = field -> ENTITIES.contains(field.getName());
-
-        ReflectionUtils.doWithFields(bean.getClass(), field -> {
-            // if we found the Contextual class already, no need to iterate more
-            if (matchingEntity.size() == 1) {
-                return;
-            }
-            ReflectionUtils.makeAccessible(field);
-            Object o = ReflectionUtils.getField(field, bean);
-            LOG.trace("Searching for entities with type {}...", field.getName());
-            // check only if it's a list and is not empty
-            if (o instanceof List && !((List<?>) o).isEmpty()) {
-                    List<ContextualClass> entities = (List<ContextualClass>) o;
-                    for (ContextualClass entity : entities) {
-                        if (StringUtils.equalsIgnoreCase(uri, entity.getAbout())) {
-                            LOG.debug("  Found matching entity {}", entity.getAbout());
-                            matchingEntity.add(entity);
-                            break;
-                        }
-                    }
-            }
-        }, entityFilter);
-
-        // return Contextual Class if found or else null
-        return matchingEntity.isEmpty() ? null : matchingEntity.get(0);
-    }
-
-
-    /**
      * This methods adds the texts to be sent for detection in a list.
      * Additionally also saves the texts sent per field for detection
-     * If the text is a uri -
-     *          checks if contextual entity exists -
-     *                YES - Check if preflabel ONLY in "def" is present and add that value for detection
-     *                NO - then add that uri value for lang-detection
      *
-     * @param bean Full bean record
      * @param textsForDetection List to store texts to be sent for language detection
      * @param textsPerField to add the text size sent for detection per field
      * @param langValueFieldMapForDetection lang-value "def" map for the whitelisted field
      */
-    public static void getTextsForDetectionRequest(FullBean bean, List<String> textsForDetection,
+    public static void getTextsForDetectionRequest(List<String> textsForDetection,
                                                    Map<String, Integer> textsPerField,List<LanguageValueFieldMap> langValueFieldMapForDetection ) {
-        for(LanguageValueFieldMap languageValueFieldMap : langValueFieldMapForDetection) {
-            int textPerField = 0;
+        for (LanguageValueFieldMap languageValueFieldMap : langValueFieldMapForDetection) {
             for (Map.Entry<String, List<String>> def : languageValueFieldMap.entrySet()) {
-                for (String value : def.getValue()) {
-                    if (EuropeanaUriUtils.isUri(value)) {
-                        ContextualClass entity = entityExistsWithUrl(bean, value);
-                        if (entity != null) {
-                            // preflabels here will either have "def" values (only if there was no other language value present) OR will be empty
-                            List<String> preflabels = getPrefLabelofEntity(entity);
-                            textsForDetection.addAll(preflabels);
-                            textPerField += preflabels.size();
-                        } else {
-                            textsForDetection.add(value); // add the uri whose contextual entity doesn't exist
-                            textPerField++;
-                        }
-                    } else {
-                        textsForDetection.add(value); // add other texts as it is
-                        textPerField++;
-                    }
-                }
-                textsPerField.put(languageValueFieldMap.getFieldName(), textPerField);
+                textsForDetection.addAll(def.getValue());
+                textsPerField.put(languageValueFieldMap.getFieldName(), def.getValue().size());
             }
         }
     }
@@ -188,22 +132,49 @@ public class LanguageDetectionUtils {
      * @param fieldName field name
      * @return
      */
-    public static LanguageValueFieldMap getValueFromLanguageMap(Map<String, List<String>> map, String fieldName) {
+    public static LanguageValueFieldMap getValueFromLanguageMap(Map<String, List<String>> map, String fieldName, FullBean bean) {
         // get non-language tagged values only
+        List<String> defValues = new ArrayList<>();
         if (!map.keySet().isEmpty() && map.containsKey(Language.DEF)) {
             List<String> values = map.get(Language.DEF);
             // check if there is if there is any other language present in the map and
             // if yes, then check if lang-tagged values already have the def tagged values present
             if (LanguageDetectionUtils.mapHasOtherLanguagesThanDef(map.keySet())) {
-                List<String> defValuesNow = LanguageDetectionUtils.removeLangTaggedValuesFromDef(map);
-                return new LanguageValueFieldMap(fieldName, Language.DEF, defValuesNow);
+                defValues.addAll(LanguageDetectionUtils.removeLangTaggedValuesFromDef(map));
             } else {
-                return new LanguageValueFieldMap(fieldName, Language.DEF, values);
+                defValues.addAll(values);
             }
+        }
+        // resolve the uri's and if contextual entity present get the preflabel
+        List<String> resolvedNonLangTaggedValues = checkForUrisAndGetPrefLabel(bean, defValues);
+        if (!resolvedNonLangTaggedValues.isEmpty()) {
+            return new LanguageValueFieldMap(fieldName, Language.DEF, resolvedNonLangTaggedValues);
         }
         return null;
     }
 
+    private static List<String> checkForUrisAndGetPrefLabel(FullBean bean, List<String> nonLanguageTaggedValues) {
+        List<String> resolvedNonLangTaggedValues = new ArrayList<>();
+        if( !nonLanguageTaggedValues.isEmpty()) {
+            for (String value : nonLanguageTaggedValues) {
+                if (EuropeanaUriUtils.isUri(value)) {
+                    ContextualClass entity = BaseRecordService.entityExistsWithUrl(bean, value);
+                    if (entity != null) {
+                        // preflabels here will either have "def" values (only if there was no other language value present) OR will be empty
+                        List<String> preflabels = getPrefLabelofEntity(entity);
+                        resolvedNonLangTaggedValues.addAll(preflabels);
+                    } else {
+                        resolvedNonLangTaggedValues.add(value); // add the uri whose contextual entity doesn't exist
+                    }
+                } else {
+                    resolvedNonLangTaggedValues.add(value); // add other texts as it is
+                }
+            }
+        }
+        // remove duplicates and return values
+        ComparatorUtils.removeDuplicates(resolvedNonLangTaggedValues);
+        return resolvedNonLangTaggedValues;
+    }
 
     /**
      * Checks if map contains keys other than "def"

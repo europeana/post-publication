@@ -1,16 +1,12 @@
 package eu.europeana.postpublication.translation.service.impl;
 
-import eu.europeana.api.commons.error.EuropeanaApiException;
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
 import eu.europeana.corelib.definitions.edm.entity.ContextualClass;
 import eu.europeana.corelib.definitions.edm.entity.Proxy;
 import eu.europeana.corelib.utils.EuropeanaUriUtils;
-import eu.europeana.postpublication.translation.model.FieldValuesLanguageMap;
-import eu.europeana.postpublication.translation.model.Language;
-import eu.europeana.postpublication.translation.model.TranslationsMap;
+import eu.europeana.postpublication.translation.exception.TranslationException;
+import eu.europeana.postpublication.translation.model.*;
 import eu.europeana.postpublication.translation.service.TranslationService;
-import eu.europeana.postpublication.translation.service.pangeanic.PangeanicV2TranslationService;
-import eu.europeana.postpublication.translation.utils.TranslationUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -20,19 +16,19 @@ import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
- *  Service that provides a translation of various proxy fields if the field doesn't already have a value in the
- *  requested language.
+ * Service that provides a translation of whitelisted proxy fields if the field doesn't already have a value in the
+ * requested language.
+ *
+ * @author srishti singh
+ *
  */
 @Service
-public class RecordTranslateService {
+public class RecordTranslateService extends BaseRecordService{
 
     private static final Logger LOG = LogManager.getLogger(RecordTranslateService.class);
-
-    // TODO check if we should also include dcIdentifier to the exclude list
-    private static final Set<String> EXCLUDE_PROXY_MAP_FIELDS = Set.of("dcLanguage", "year", "userTags", "edmRights");
-    private static final List<String> ENTITIES = List.of("agents", "concepts", "places", "timespans");
 
     private final TranslationService translationService;
 
@@ -45,14 +41,6 @@ public class RecordTranslateService {
         this.translationService = translationService;
     }
 
-    private Language getHintForLangDetect(FullBean bean) {
-        List<Language> defaultTranslationLanguage = TranslationUtils.getEdmLanguage(bean);
-        if (!defaultTranslationLanguage.isEmpty()) {
-            return defaultTranslationLanguage.get(0);
-        }
-        return null;
-    }
-
     /**
      * @return true if there is a translation service available
      */
@@ -60,393 +48,213 @@ public class RecordTranslateService {
         return translationService != null;
     }
 
+
     /**
-     * Add a translation of various proxy fields to the provided record, but only if that field does not already have
-     * values in the requested language
+     * Iterate over all the proxies fields and returns a translated updated bean in the target lanaguge
+     * Translation WorkFlow :
+     *   1. Choose the language to translate from by finding the most representative language in the metadata
+     *        Most representative language is the one that has the most values for the whitelisted properties from all Proxies
+     *        Ignore values with language code “zxx” and unsupported languages (ie. call the isSupported method)
+     *        If there is a tie, choose based on the precedence list3 of the two (or more)
      *
-     * @param bean        the record to be modified
-     * @param targetLanguage the requested languages (only first language provided is used)
-     * @return modified record
-     * @throws EuropeanaApiException when there is a problem sending/retrieving data from the translation service
+     *   2. If the chosen language is English then do nothing (stop the workflow)
+     *
+     *   3. Gather all language qualified values matching the chosen language per whitelisted property from all
+     *      Proxies including the Europeana Proxy. If there is already a English value for a property then skip
+     *      this property (do not select any value from it)
+     *
+     *     For contextual entities, consider only the value from the skos:prefLabel
+     *
+     *   4. Check if there is anything to translate, if not do nothing (stop workflow)
+     *
+     *   5. Translate all values (of the chosen language) to English (ie. call translate method)
+     *      Eliminate any duplicate values for each property
+     *
+     *   6. Add all target language translations to the respective property in the Europeana Proxy
+     *
+     *
      */
-    public FullBean translateProxyFields(FullBean bean, Language targetLanguage) throws EuropeanaApiException {
-        long startTime = System.currentTimeMillis();
-        // For the time being we only translate into the first language in the list. Any other provided language in the
-        // list is used for filtering only
-        String targetLang = targetLanguage.name().toLowerCase(Locale.ROOT);
-
-        // gather all translations
-        TranslationsMap textsToTranslate = new TranslationsMap(getProxyFieldsToTranslate(bean, targetLang));
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Translate - Gathering data took {} ms", (System.currentTimeMillis() - startTime));
-        }
-
-        long startTimeTranslate = System.currentTimeMillis();
-
-        // edmLanguage is passed a hint for Pageanic translations
-        String langHint = null ;
-        if (translationService.getClass().equals(PangeanicV2TranslationService.class)) {
-            Language edmLang = getHintForLangDetect(bean);
-            langHint = (edmLang != null ? edmLang.name().toLowerCase(Locale.ROOT) : null);
-
-        }
-
-        if(!textsToTranslate.isEmpty()) {
-            LOG.info("Translate - record {}", bean.getAbout());
-        }
-
-        FieldValuesLanguageMap translations = textsToTranslate.translate(translationService, targetLang, langHint);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Translate - Send/receive translation request took {} ms", (System.currentTimeMillis() - startTimeTranslate));
-        }
-
-        // add translations to Europeana proxy
-        long startTimeOutput = System.currentTimeMillis();
-        for (Map.Entry<String, List<String>> entry : translations.entrySet()) {
-            generateTranslatedField(bean, entry.getKey(), targetLang, entry.getValue());
-        }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Translate - Generating output took {} ms", (System.currentTimeMillis() - startTimeOutput));
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Translate - Total time {} ms", (System.currentTimeMillis() - startTime));
-        }
-        return bean;
-    }
-
-    /**
-     * Iterate over all the proxies fields and return a TranslationMap for each field that has data we want to translate
-     */
-    private List<FieldValuesLanguageMap> getProxyFieldsToTranslate(FullBean bean, String targetLang) {
-        List<FieldValuesLanguageMap> result = new ArrayList<>();
+    public FullBean translateProxyFields(FullBean bean, String targetLanguage) throws TranslationException {
         List<Proxy> proxies = new ArrayList<>(bean.getProxies()); // make sure we clone first so we can edit the list to our needs.
 
         // Data/santity check
         if (proxies.size() < 2) {
             LOG.error("Unexpected data - expected at least 2 proxies, but found only {}!", proxies.size());
-            return result;
-        }
-        // No need to look at the Europeana proxy, so we remove that from the list (for now, we may need to include it
-        // later, if the way we do translations changes).
-        Proxy europeanaProxy = proxies.remove(0);
-        if (!europeanaProxy.isEuropeanaProxy()) {
-            LOG.error("Unexpected data - first proxy is not Europeana proxy!");
-            return result;
+            return bean;
         }
 
-        // TODO check if reflection is still needed
-        Proxy mainProxy = proxies.get(0);
-        boolean moreThanOneProxy = proxies.size() > 1;
-        ReflectionUtils.FieldFilter proxyFieldFilter = field -> field.getType().isAssignableFrom(Map.class) &&
-                !EXCLUDE_PROXY_MAP_FIELDS.contains(field.getName());
-
-        ReflectionUtils.doWithFields(mainProxy.getClass(), field -> {
-            boolean hasStaticTranslation = moreThanOneProxy && hasStaticTranslations(mainProxy, field);
-            LOG.trace("Processing field {}, hasStaticTranslation {}...", field.getName(), hasStaticTranslation);
-            List<FieldValuesLanguageMap> toTranslate = getProxyFieldToTranslate(proxies, field, hasStaticTranslation, targetLang);
-            if (!toTranslate.isEmpty()) {
-                for (FieldValuesLanguageMap map : toTranslate) {
-                    result.addAll(checkValuesForUris(bean, map, hasStaticTranslation, targetLang));
-                }
-            }
-        }, proxyFieldFilter);
-        return result;
-    }
-
-    /**
-     * If the aggregator proxy has language values other than "def" for the requested field, then we
-     * can assume there's already a translation present.
-     */
-    boolean hasStaticTranslations(Proxy aggregatorProxy, Field field) {
-        ReflectionUtils.makeAccessible(field);
-        Object o = ReflectionUtils.getField(field, aggregatorProxy);
-        if (o instanceof Map) {
-            Map map = (Map) o;
-            // if there are more than 1 keys, then surely one of them is not def
-            return map.keySet().size() > 1 || (map.keySet().size() == 1 && !Language.DEF.equals(map.get(0)));
-        }
-        return false;
-    }
-
-    /**
-     * Check all proxies if they have the requested field and if so have a value in the target language or in any of
-     * the "fallback" languages.
-     * Also, for target-lang and 'en' we also check for uri values in def.
-     * If present, uri values are also sent for translations
-     * If there is a static translation, we don't have to check for def or other values (step 3 and 4)
-     * Note that the returned translationMap contains data for only 1 field
-     */
-    private List<FieldValuesLanguageMap> getProxyFieldToTranslate(List<Proxy> proxies, Field field, boolean hasStaticTranslations, String targetLang) {
-        // 1. Check if we have targetLang value
-        List<FieldValuesLanguageMap> result = getProxyValueForLang(proxies, field, targetLang, true);
-        if (!result.isEmpty()) {
-            // check if def tag is found (uri values) and send that for translations alone.
-            if (result.size() > 1 && result.get(1).getSourceLanguage().equals(Language.DEF)) {
-                LOG.debug("  Found uri value in def for {},translation needed", field.getName());
-                return Collections.singletonList(result.get(1));
-            } else {
-                LOG.debug("  Found value with target language for {}, no translation needed", field.getName());
-                return Collections.emptyList();
-            }
+        if (!proxies.get(0).isEuropeanaProxy()) {
+            LOG.error("Unexpected data - First proxy is not Europeana Proxy");
+            return bean;
         }
 
-        // 2. If targetLang is not English, check if there's an English translation
-        if (!Language.ENGLISH.equals(targetLang)) {
-            result = getProxyValueForLang(proxies, field, Language.ENGLISH, true);
-        }
-        if (result.isEmpty() && !hasStaticTranslations) {
-            // 3. Check if there is a default value
-            result = getProxyValueForLang(proxies, field, Language.DEF, false);
-            if (result.isEmpty()) {
-                // 4. Pick any language
-                // TODO we could optimize later to use a language we already have for translation
-                result = getProxyValueForLang(proxies, field, null, false);
-            }
-        }
-
-        if (result.isEmpty()) {
-            LOG.trace("  Found no values for field {}", field.getName());
-        } else {
-            LOG.debug("  Found value for field {} with {} language", field.getName(), result.get(0).getSourceLanguage());
-        }
-        return result;
-    }
-
-    /**
-     * Checks all proxies to see if there is any proxy that has that field with a value in the requested language
-     * If language is null, then it will return the first language available (if any).
-     * Note that the returned translationMap contains data for only 1 field
-     */
-    private List<FieldValuesLanguageMap> getProxyValueForLang(List<Proxy> proxies, Field field, String lang, boolean checkForUriInDef) {
-        List<FieldValuesLanguageMap> result = new ArrayList<>();
+        // 1. get the most representative language from all proxies
+        Map<String, Integer> langCountMap = new HashMap<>();
         for (Proxy proxy : proxies) {
-            ReflectionUtils.makeAccessible(field);
-            Object value = ReflectionUtils.getField(field, proxy);
-            if (value instanceof Map) {
-                HashMap<String, List<String>> origFieldData = (HashMap<String, List<String>>) value;
-                // make sure we make a deep copy of the map so we can modify data later without affecting original record data
-                result = getValueFromLanguageMap(SerializationUtils.clone(origFieldData), field.getName(), lang, checkForUriInDef);
-            } else if (value != null) {
-                LOG.warn("Unexpected data - field {} did not return a map", field.getName());
-            }
-
-            if (!result.isEmpty()) {
-                break;
-            }
+            ReflectionUtils.doWithFields(proxy.getClass(), field -> getLanguageAndCount(proxy, field, langCountMap, targetLanguage), proxyFieldFilter);
         }
-        return result;
-    }
 
-    private List<FieldValuesLanguageMap> getValueFromLanguageMap(Map<String, List<String>> map, String fieldName, String lang, boolean checkForUriInDef) {
-        if (lang == null && !map.keySet().isEmpty()) {
-            // return any value if available, but only if it's a supported language
-            for (String key : map.keySet()) {
-                if (Language.isSupported(key)) {
-                    return Collections.singletonList(
-                            new FieldValuesLanguageMap(Language.getLanguage(key).name().toLowerCase(Locale.ROOT), fieldName, map.get(key)));
-                } else {
-                    LOG.debug("  Found value for field {} in unsupported language {}", fieldName, key);
-                }
-            }
-        } else if (lang != null && (map.containsKey(lang) || map.keySet().stream().anyMatch(key -> key.startsWith(lang)))) {
-            return getValuesFromLanguageMap(map, fieldName, lang, checkForUriInDef);
+        String language = getMostRepresentativeLanguage(langCountMap);
+        LOG.debug("Most representative language chosen for translations is  {}", language);
+
+        // if chosen language is "en" do nothing, stop the translation workflow
+        if (StringUtils.equals(language, Language.ENGLISH)) {
+            return bean;
         }
-        return Collections.emptyList();
+
+        // 3. Gather all language qualified values matching the chosen language per whitelisted property from all Proxies including the Europeana Proxy
+        TranslationMap textToTranslate = new TranslationMap(language);
+        for (Proxy proxy : proxies) {
+            ReflectionUtils.doWithFields(proxy.getClass(), field -> getProxyValuesToTranslateForField(proxy, field, language, bean, textToTranslate), proxyFieldFilter);
+        }
+
+        // if no translation gathered return
+        if (textToTranslate.isEmpty()) {
+            return bean;
+        }
+
+        // get the translation in the target language
+        TranslationMap translations = textToTranslate.translate(translationService, targetLanguage);
+
+        // add all the translated data to Europeana proxy
+        updateProxy(proxies.get(0), translations);
+
+        return bean;
     }
 
     /**
-     * Returns the values for the language. Also checks if checkForUriInDef is true,
-     * adds the def values for translations (only if they are uri's).
-     * hence, the list of two FieldValuesLanguageMap are returned :
-     * one for language and one for def (if checkForUriInDef is true)
+     * Returns the source lanaguge for the translation workflow
      *
-     * Note: that the returned translationMap contains data for only 1 field
-     * @param map
-     * @param fieldName
-     * @param lang language for which value is fetched
-     * @param checkForUriInDef true, if we want to check the def values too
+     * @param langCountMap map contaiang languages present in all proxies and their count.
      * @return
      */
-    private List<FieldValuesLanguageMap> getValuesFromLanguageMap(Map<String, List<String>> map, String fieldName, String lang, boolean checkForUriInDef) {
-        // values will not be null, as we have checked already if the lang is present
-        List<String> valuesToTranslate = TranslationUtils.getValuesToTranslateFromMultilingualMap(map, lang);
-        FieldValuesLanguageMap valueMap = new FieldValuesLanguageMap(lang, fieldName, valuesToTranslate);
-        // if checkForUriInDef is true and map contains def tag, add all the uri's present in def
-        if (checkForUriInDef && map.containsKey(Language.DEF)) {
-            FieldValuesLanguageMap defMapWithUriValues = getUriValuesFromDef(map.get(Language.DEF), fieldName);
-            if (defMapWithUriValues != null) {
-                LOG.debug("  Found uri for field {} in def tag for language {}", fieldName, lang);
-                return Arrays.asList(valueMap, defMapWithUriValues);
+    private String getMostRepresentativeLanguage(Map<String, Integer> langCountMap) {
+        //reverse map - as values might not be unique so using grouping method
+        Map<Integer, List<String>> reverseMap =
+                langCountMap.entrySet()
+                        .stream()
+                        .collect(Collectors.groupingBy(Map.Entry::getValue, Collectors.mapping(Map.Entry::getKey, Collectors.toList())));
+        List<String> languagesWithMostvalues = reverseMap.get(Collections.max(reverseMap.keySet()));
+
+        // if there is a tie between more than one language, choose based on the precedance list
+        // TODO check if the precedance list doesn't have the most representative languages then what to do
+        if (languagesWithMostvalues.size() > 1) {
+            Optional<String> langWithHigherPrecedance =  PRECENDANCE_LIST.stream().filter(languagesWithMostvalues :: contains).findFirst();
+            if (langWithHigherPrecedance.isPresent()) {
+                return langWithHigherPrecedance.get();
             }
         }
-        // otherwise, return value for 1 particular language
-        return Collections.singletonList(valueMap);
+        // will only have one value here, hence by default or any else case return the first language
+        return languagesWithMostvalues.get(0);
     }
 
-    /**
-     * Returns the uri values from def
-     * @param valuesToCheck list of values for def
-     * @param fieldName
-     * @return
-     */
-    private FieldValuesLanguageMap getUriValuesFromDef(List<String> valuesToCheck, String fieldName) {
-        List<String> valuesToTranslate = new ArrayList<>();
-        for (String value : valuesToCheck) {
-            if (EuropeanaUriUtils.isUri(value)) {
-                valuesToTranslate.add(value);
-            }
-        }
-        if (!valuesToTranslate.isEmpty()) {
-            return new FieldValuesLanguageMap(Language.DEF, fieldName, valuesToTranslate);
-        }
-        return null;
-    }
-
-    /**
-     * See if any of the values in the maps are uris. If so, we will try to see if we can find a corresponding entity
-     * and replace the uri with the entities preflabel (if available, otherwise just remove the uri).
-     */
-    private List<FieldValuesLanguageMap> checkValuesForUris(FullBean bean, FieldValuesLanguageMap map, boolean hasStaticTranslation,
-                                                            String targetLang) {
-        // map should have only 1 field at this point
-        if (map.keySet().size() != 1) {
-            throw new IllegalArgumentException("Resolving uri's is only supported for maps with 1 key");
-        }
-        String field = map.keySet().iterator().next();
-        List<String> valuesToCheck = map.get(field);
-
-        List<String> urisToRemove = new ArrayList<>();
-        List<FieldValuesLanguageMap> prefLabelsToTranslate = new ArrayList<>();
-        for (String value : valuesToCheck) {
-            if (EuropeanaUriUtils.isUri(value)) {
-                urisToRemove.add(value);
-                if (hasStaticTranslation) {
-                    // we assume uris are resolved as part of static translation, no need to find entity preflabels
-                    LOG.debug("Removing uri {}...", value);
-                    continue;
-                } else {
-                    LOG.debug("Checking uri {}...", value);
-                }
-
-                // find entity
-                ContextualClass entity = findEntity(bean, value);
-                if (entity == null) {
-                    LOG.debug("  No entity found");
-                    continue;
-                }
-
-                // find entity preflabel
-                FieldValuesLanguageMap prefLabel = getEntityPrefLabel(entity, field, targetLang);
-                if (prefLabel == null) {
-                    LOG.debug("  Entity found, but no preflabel to translate");
-                } else {
-                    LOG.debug("  Entity found, adding prefLabel with {} language to translate", prefLabel.getSourceLanguage());
-                    prefLabelsToTranslate.add(prefLabel);
-                }
-            }
-        }
-
-        // delete all uris
-        map.remove(field, urisToRemove);
-
-        // gather final results
-        List<FieldValuesLanguageMap> result = new ArrayList<>();
-        for (FieldValuesLanguageMap prefLabelMap : prefLabelsToTranslate) {
-            // if any of the prefLabel maps have the same source language as the original we merge it into the original map
-            if (prefLabelMap.getSourceLanguage().equals(map.getSourceLanguage())) {
-                map.merge(prefLabelMap);
-            } else {
-                result.add(prefLabelMap);
-            }
-        }
-        List<String> originalValues = map.get(field);
-        if (!originalValues.isEmpty()) {
-            result.add(0, map); // return also original remaining values in map if it's not empty
-        }
-        return result;
-    }
-
-    /**
-     * See if there is an entity with the provided uri
-     */
-    private ContextualClass findEntity(FullBean bean, String uri) {
-        final List<ContextualClass> result = new ArrayList<>();
-
-        ReflectionUtils.FieldFilter entityFilter = field -> ENTITIES.contains(field.getName()) && result.isEmpty();
-        ReflectionUtils.doWithFields(bean.getClass(), field -> {
-            ReflectionUtils.makeAccessible(field);
-            Object o = ReflectionUtils.getField(field, bean);
-            LOG.trace("Searching for entities with type {}...", field.getName());
-            if (o instanceof List) {
-                List<ContextualClass> entities = (List<ContextualClass>) o;
-                for (ContextualClass entity : entities) {
-                    if (StringUtils.equalsIgnoreCase(uri, entity.getAbout())) {
-                        LOG.debug("  Found matching entity {}", entity.getAbout());
-                        result.add(entity);
-                        break;
+    private void getLanguageAndCount(Proxy proxy, Field field, Map<String, Integer> langCountMap, String targetLang) {
+        Map<String, List<String>> langValueMap = getValueOfTheField(proxy).apply(field.getName());
+        if (!langValueMap.isEmpty()) {
+            for (Map.Entry<String, List<String>> langValue : langValueMap.entrySet()) {
+                String key = langValue.getKey();
+                if (languageToBeChosen(key, targetLang)) {
+                    Integer value = langValue.getValue().size();
+                    if (langCountMap.containsKey(key)) {
+                        value += langCountMap.get(key);
                     }
+                    langCountMap.put(key, value);
                 }
             }
-        }, entityFilter);
-
-        if (result.isEmpty()) {
-            return null;
         }
-        return result.get(0);
     }
 
-    private FieldValuesLanguageMap getEntityPrefLabel(ContextualClass entity, String fieldName, String targetLang) {
-        FieldValuesLanguageMap entityPrefLabel = null;
-        Map<String, List<String>> prefLabels = entity.getPrefLabel();
-        if (prefLabels == null) {
-            LOG.debug("  Entity {} has no prefLabels", entity.getAbout());
-            return null;
-        }
+    /**
+     * Identifies if Language should be selected as most representative
+     * Ignores the values with language code “zxx” or "def" and unsupported languages (ie. call the isSupported method)
+     * <p>
+     * NOTE : We check if the translation is supported for the language pair.
+     *
+     * @param lang value
+     * @return true if language should be chosen
+     */
 
-        // 1. Check if we have targetLang value
-        List<FieldValuesLanguageMap> result = getValueFromLanguageMap(prefLabels, entity.getAbout(), targetLang, false);
-        if (!result.isEmpty()) {
-            LOG.debug("  Found prefLabel with target language for {}, no translation needed", entity.getAbout());
-            return null;
-        }
+    private boolean languageToBeChosen(String lang, String targetLanguage) {
+        return !(StringUtils.equalsIgnoreCase(lang, Language.NO_LINGUISTIC_CONTENT) || StringUtils.equalsIgnoreCase(lang, Language.DEF))
+                && translationService.isSupported(lang, targetLanguage);
+    }
 
-        // 2. If targetLang is not English, check if there's an English translation
-        if (!Language.ENGLISH.equals(targetLang)) {
-            result = getValueFromLanguageMap(prefLabels, entity.getAbout(), Language.ENGLISH, false);
+    /**
+     * Returns Proxy value to translate for the given field in the map
+     * @param proxy
+     * @param field
+     * @param sourceLang
+     * @param bean
+     * @return
+     */
+    private void getProxyValuesToTranslateForField(Proxy proxy, Field field, String sourceLang, FullBean bean, TranslationMap map) {
+        HashMap<String, List<String>> origFieldData = (HashMap<String, List<String>>) getValueOfTheField(proxy).apply(field.getName());
+        getValueFromLanguageMap(SerializationUtils.clone(origFieldData), field, sourceLang, bean, map);
+    }
+
+    /**
+     * Returns the language qualified values matching the chosen language
+     * If there is already a English value for a property then skip this property (do not select any value from it)
+     * For contextual entities, consider only the value from the skos:prefLabel
+     *
+     * @param origFieldData field lang value map
+     * @param field         field name (from the whitelisted fields)
+     * @param sourceLang    the language chosen for translation
+     * @param bean          record
+     * @return
+     */
+    private void getValueFromLanguageMap(HashMap<String, List<String>> origFieldData, Field field, String sourceLang, FullBean bean, TranslationMap map1) {
+        // Get the value only if there is NO "en" lanaguge tag already present for the field and there is value present for the sourceLang
+        if (origFieldData != null && !origFieldData.isEmpty() && !origFieldData.containsKey(Language.ENGLISH) && origFieldData.containsKey(sourceLang)) {
+            map1.add(field.getName(), getValuesToTranslate(origFieldData, sourceLang, bean));
         }
-        if (result.isEmpty()) {
-            // 3. Check if there is a default value
-            result = getValueFromLanguageMap(prefLabels, entity.getAbout(), Language.DEF, false);
-            if (result.isEmpty()) {
-                // 4. Pick any language
-                // TODO we could optimize later to use a language we already have for translation
-                result = getValueFromLanguageMap(prefLabels, entity.getAbout(), null, false);
+    }
+
+    /**
+     * Returns list of values to be translated.
+     * Looks for Contextual entities, if found fetches the prefLabel of the entity in the source language
+     *
+     * @param origFieldData field lang value map
+     * @param sourceLang    the language chosen for translation
+     * @param bean          record
+     * @return
+     */
+    private List<String> getValuesToTranslate(HashMap<String, List<String>> origFieldData, String sourceLang, FullBean bean) {
+        List<String> valuesToTranslate = new ArrayList<>();
+        for (String value : origFieldData.get(sourceLang)) {
+            // if the value is a URI get the contextual entity pref label in source lang
+            if (EuropeanaUriUtils.isUri(value)) {
+                ContextualClass entity = entityExistsWithUrl(bean, value);
+                if (entity != null) {
+                    if (entity.getPrefLabel() != null && entity.getPrefLabel().containsKey(sourceLang)) {
+                        LOG.debug("Entity {} has preflabel in chosen language {} for translation  ", value, sourceLang);
+                        valuesToTranslate.addAll(entity.getPrefLabel().get(sourceLang));
+                    }
+                } else {
+                    valuesToTranslate.add(value); // add the uri whose contextual entity doesn't exist
+                }
+            } else {
+                valuesToTranslate.add(value); // add non uri values
             }
         }
-
-        // TODO should we check if preflabel values are uri!? If we do that we could get into an infinite loop!
-
-        if (result.isEmpty()) {
-            LOG.debug("  Found no preflabels for {}", entity.getAbout());
-        } else {
-            // as checkForUriInDef is false, result will only contain one value.
-            entityPrefLabel = result.get(0);
-            LOG.debug("  Found preflabel with language {} for {} ", entityPrefLabel.getSourceLanguage(), entity.getAbout());
-            // we need to replace the original uri (key) with the field name where we found the uri
-            entityPrefLabel.put(fieldName, entityPrefLabel.remove(entity.getAbout()));
-        }
-        return entityPrefLabel;
+        return valuesToTranslate;
     }
 
 
-    private void generateTranslatedField(FullBean bean, String key, String lang, List<String> values) {
-        Proxy proxy = bean.getProxies().get(0);
-        if (proxy == null || !proxy.isEuropeanaProxy()) {
-            LOG.error("First proxy of record {} is not an EuropeanaProxy!", bean.getAbout());
-            return;
-        }
-        TranslationUtils.addTranslationsToObject(proxy, key, lang, values);
-    }
+    /**
+     * Updates the proxy object field values by adding the new map values
+     * @param proxy
+     * @param translatedMap
+     */
+    private void updateProxy( Proxy proxy, TranslationMap translatedMap) {
+        translatedMap.entrySet().stream().forEach(value -> {
+            Map<String, List<String>> existingMap = getValueOfTheField(proxy).apply(value.getKey());
+            // get the "en" values or default to empty list
+            List<String> enValues = existingMap.getOrDefault(translatedMap.getSourceLanguage(), new ArrayList<>());
+            enValues.addAll(value.getValue());
+            // update the "en" map
+            existingMap.compute(translatedMap.getSourceLanguage(), (key, val)-> enValues);
 
+        });
+    }
 }

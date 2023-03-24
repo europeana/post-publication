@@ -198,14 +198,13 @@ public class PangeanicTranslationUtils {
     }
 
     public static boolean noTranslationRequired(String lang) {
-        return (StringUtils.equals(lang, Language.NO_LINGUISTIC_CONTENT)
-                || StringUtils.equals(lang, Language.DEF)
+        return ( lang == null || StringUtils.equals(lang, Language.NO_LINGUISTIC_CONTENT)
                 || StringUtils.equals(lang, Language.ENGLISH));
     }
 
     public static boolean nonTranslatedDataExists(List<String> detectedLanguages) {
         return (detectedLanguages.contains(Language.NO_LINGUISTIC_CONTENT)
-                || detectedLanguages.contains(Language.DEF)
+                || detectedLanguages.contains(null)
                 || detectedLanguages.contains(Language.ENGLISH));
     }
 }

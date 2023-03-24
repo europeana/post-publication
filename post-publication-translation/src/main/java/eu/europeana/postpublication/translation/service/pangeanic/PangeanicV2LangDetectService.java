@@ -36,6 +36,10 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
 
     protected CloseableHttpClient translateClient;
 
+    public String getDetectEndpoint() {
+        return detectEndpoint;
+    }
+
     /**
      * Creates a new client that can send translation requests to Google Cloud Translate. Note that the client needs
      * to be closed when it's not used anymore
@@ -44,6 +48,7 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
      */
     @PostConstruct
     private void init() {
+        System.out.println("here");
         PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
         cm.setMaxTotal(PangeanicTranslationUtils.MAX_CONNECTIONS);
         cm.setDefaultMaxPerRoute(PangeanicTranslationUtils.MAX_CONNECTIONS_PER_ROUTE);
