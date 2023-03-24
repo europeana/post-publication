@@ -23,7 +23,7 @@ public class RecordProcessor implements ItemProcessor<FullBean, FullBean> {
 
     @Override
     public FullBean process(@NotNull FullBean bean) throws Exception {
-        bean = translateFilterService.translateProxyFields(bean, Language.EN);
+        bean = translateFilterService.translateProxyFields(bean, Language.ENGLISH);
         return bean;
     }
 }
