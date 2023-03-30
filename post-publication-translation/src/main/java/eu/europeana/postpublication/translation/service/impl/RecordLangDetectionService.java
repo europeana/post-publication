@@ -93,9 +93,9 @@ public class RecordLangDetectionService extends BaseRecordService {
 
             }, proxyFieldFilter);
 
-            LOG.debug("Gathered {} fields non-language tagged values for record {} and proxy {}", langValueFieldMapForDetection.size(), bean.getAbout(), proxy.getAbout());
+            LOG.debug("For record {} gathered {} fields non-language tagged values for detection. ", bean.getAbout(), langValueFieldMapForDetection.size());
 
-            Map<String, Integer> textsPerField = new HashMap<>();
+            Map<String, Integer> textsPerField = new LinkedHashMap<>(); // to maintain the order of the fields
             List<String> textsForDetection = new ArrayList<>();
 
             // 3. collect all the values in one list for single lang-detection request per proxy
@@ -104,7 +104,6 @@ public class RecordLangDetectionService extends BaseRecordService {
             // 4. send lang-detect request
             List<String> detectedLanguages = detectionService.detectLang(textsForDetection, langHint);
             LOG.debug("Detected languages - {} ", detectedLanguages);
-
             //5. assign language attributes to the values
             List<LanguageValueFieldMap> correctLangValueMap = LanguageDetectionUtils.getLangDetectedFieldValueMap(textsPerField, detectedLanguages, textsForDetection);
 
@@ -116,7 +115,7 @@ public class RecordLangDetectionService extends BaseRecordService {
     }
 
     private LanguageValueFieldMap getProxyFieldsValues(Proxy proxy, Field field, FullBean bean) {
-         HashMap<String, List<String>> origFieldData = (HashMap<String, List<String>>) getValueOfTheField(proxy).apply(field.getName());
+         HashMap<String, List<String>> origFieldData = (HashMap<String, List<String>>) getValueOfTheField(proxy, false).apply(field.getName());
          return LanguageDetectionUtils.getValueFromLanguageMap(SerializationUtils.clone(origFieldData), field.getName(), bean);
     }
 
@@ -127,7 +126,7 @@ public class RecordLangDetectionService extends BaseRecordService {
      */
     private void updateProxy( Proxy proxy, List<LanguageValueFieldMap> correctLangMap) {
         correctLangMap.stream().forEach(value -> {
-            Map<String, List<String>> map = getValueOfTheField(proxy).apply(value.getFieldName());
+            Map<String, List<String>> map = getValueOfTheField(proxy, true).apply(value.getFieldName());
 
             // Now add the new lang-value map in the proxy
             for (Map.Entry<String, List<String>> entry : value.entrySet()) {

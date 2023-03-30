@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  *
  */
 @Service
-public class RecordTranslateService extends BaseRecordService{
+public class RecordTranslateService extends BaseRecordService {
 
     private static final Logger LOG = LogManager.getLogger(RecordTranslateService.class);
 
@@ -76,7 +76,6 @@ public class RecordTranslateService extends BaseRecordService{
      */
     public FullBean translateProxyFields(FullBean bean, String targetLanguage) throws TranslationException {
         List<Proxy> proxies = new ArrayList<>(bean.getProxies()); // make sure we clone first so we can edit the list to our needs.
-
         // Data/santity check
         if (proxies.size() < 2) {
             LOG.error("Unexpected data - expected at least 2 proxies, but found only {}!", proxies.size());
@@ -115,9 +114,9 @@ public class RecordTranslateService extends BaseRecordService{
 
         // get the translation in the target language
         TranslationMap translations = textToTranslate.translate(translationService, targetLanguage);
-
+        Proxy europeanProxy = bean.getProxies().get(0);
         // add all the translated data to Europeana proxy
-        updateProxy(proxies.get(0), translations);
+        updateProxy(europeanProxy, translations);
 
         return bean;
     }
@@ -135,7 +134,6 @@ public class RecordTranslateService extends BaseRecordService{
                         .stream()
                         .collect(Collectors.groupingBy(Map.Entry::getValue, Collectors.mapping(Map.Entry::getKey, Collectors.toList())));
         List<String> languagesWithMostvalues = reverseMap.get(Collections.max(reverseMap.keySet()));
-
         // if there is a tie between more than one language, choose based on the precedance list
         // TODO check if the precedance list doesn't have the most representative languages then what to do
         if (languagesWithMostvalues.size() > 1) {
@@ -149,7 +147,7 @@ public class RecordTranslateService extends BaseRecordService{
     }
 
     private void getLanguageAndCount(Proxy proxy, Field field, Map<String, Integer> langCountMap, String targetLang) {
-        Map<String, List<String>> langValueMap = getValueOfTheField(proxy).apply(field.getName());
+        Map<String, List<String>> langValueMap = getValueOfTheField(proxy, false).apply(field.getName());
         if (!langValueMap.isEmpty()) {
             for (Map.Entry<String, List<String>> langValue : langValueMap.entrySet()) {
                 String key = langValue.getKey();
@@ -188,7 +186,7 @@ public class RecordTranslateService extends BaseRecordService{
      * @return
      */
     private void getProxyValuesToTranslateForField(Proxy proxy, Field field, String sourceLang, FullBean bean, TranslationMap map) {
-        HashMap<String, List<String>> origFieldData = (HashMap<String, List<String>>) getValueOfTheField(proxy).apply(field.getName());
+        HashMap<String, List<String>> origFieldData = (HashMap<String, List<String>>) getValueOfTheField(proxy, false).apply(field.getName());
         getValueFromLanguageMap(SerializationUtils.clone(origFieldData), field, sourceLang, bean, map);
     }
 
@@ -248,13 +246,12 @@ public class RecordTranslateService extends BaseRecordService{
      */
     private void updateProxy( Proxy proxy, TranslationMap translatedMap) {
         translatedMap.entrySet().stream().forEach(value -> {
-            Map<String, List<String>> existingMap = getValueOfTheField(proxy).apply(value.getKey());
+            Map<String, List<String>> existingMap = getValueOfTheField(proxy, true).apply(value.getKey());
             // get the "en" values or default to empty list
             List<String> enValues = existingMap.getOrDefault(translatedMap.getSourceLanguage(), new ArrayList<>());
             enValues.addAll(value.getValue());
             // update the "en" map
             existingMap.compute(translatedMap.getSourceLanguage(), (key, val)-> enValues);
-
         });
     }
 }

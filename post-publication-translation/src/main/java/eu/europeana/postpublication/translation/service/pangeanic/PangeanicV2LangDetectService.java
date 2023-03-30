@@ -17,14 +17,12 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
 @PropertySource("classpath:post-publication.properties")
 @PropertySource(value = "classpath:post-publication.user.properties", ignoreResourceNotFound = true)
 public class PangeanicV2LangDetectService implements LanguageDetectionService {
@@ -48,7 +46,6 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
      */
     @PostConstruct
     private void init() {
-        System.out.println("here");
         PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
         cm.setMaxTotal(PangeanicTranslationUtils.MAX_CONNECTIONS);
         cm.setDefaultMaxPerRoute(PangeanicTranslationUtils.MAX_CONNECTIONS_PER_ROUTE);

@@ -46,7 +46,7 @@ public class LanguageDetectionUtils {
             }
         }
         if (!lang.isEmpty()) {
-            LOG.debug("Default translation and filtering applied for language : {} ", lang);
+            LOG.debug("For record {} , fetched edm language : {} ", lang);
         }
         return lang;
     }
@@ -82,7 +82,7 @@ public class LanguageDetectionUtils {
      * @param langValueFieldMapForDetection lang-value "def" map for the whitelisted field
      */
     public static void getTextsForDetectionRequest(List<String> textsForDetection,
-                                                   Map<String, Integer> textsPerField,List<LanguageValueFieldMap> langValueFieldMapForDetection ) {
+                                                   Map<String, Integer> textsPerField, List<LanguageValueFieldMap> langValueFieldMapForDetection ) {
         for (LanguageValueFieldMap languageValueFieldMap : langValueFieldMapForDetection) {
             for (Map.Entry<String, List<String>> def : languageValueFieldMap.entrySet()) {
                 textsForDetection.addAll(def.getValue());
@@ -135,7 +135,7 @@ public class LanguageDetectionUtils {
     public static LanguageValueFieldMap getValueFromLanguageMap(Map<String, List<String>> map, String fieldName, FullBean bean) {
         // get non-language tagged values only
         List<String> defValues = new ArrayList<>();
-        if (!map.keySet().isEmpty() && map.containsKey(Language.DEF)) {
+        if (!map.isEmpty() && map.containsKey(Language.DEF)) {
             List<String> values = map.get(Language.DEF);
             // check if there is if there is any other language present in the map and
             // if yes, then check if lang-tagged values already have the def tagged values present

@@ -103,26 +103,10 @@ public class PostPublicationDataConfig {
      * Currently for Post publication pipeline only Pangeanic
      * @return
      */
-    @Bean(name = AppConstants.TRANSLATION_SERVICE_BEAN)
+    @Bean(name = AppConstants.LANGUAGE_DETECTION_SERVICE_BEAN)
     public LanguageDetectionService detectionService() {
         return new PangeanicV2LangDetectService();
     }
 
-    /**
-     * RecordTranslateService bean
-     * @return
-     */
-    @Bean(name = AppConstants.LANGUAGE_DETECTION_SERVICE_BEAN)
-    public RecordLangDetectionService languageDetectionService() {
-        return new RecordLangDetectionService(detectionService());
-    }
 
-    /**
-     * RecordTranslateService bean
-     * @return
-     */
-    @Bean(name = AppConstants.RECORD_TRANSLATION_SERVICE_BEAN)
-    public RecordTranslateService recordTranslateService() {
-        return new RecordTranslateService(translationService());
-    }
 }

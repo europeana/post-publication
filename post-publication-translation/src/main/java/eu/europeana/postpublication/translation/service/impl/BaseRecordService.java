@@ -17,16 +17,14 @@ public abstract class BaseRecordService {
     private static final Logger LOG = LogManager.getLogger(BaseRecordService.class);
 
     // TODO check this field value in DB dctermsTableOfContents there is a chnace it is named dcTermsTOC
-    private static final Set<String> INCLUDE_PROXY_MAP_FIELDS = Set.of("dcContributor", "dcCoverage", "dcCreator", "dcDate", "dcDescription", "dcFormat", "dcIdentifier",
-            "dcLanguage", "dcPublisher", "dcRelation", "dcRights", "dcSource", "dcSubject", "dcTitle", "dcType", "dctermsAlternative", "dctermsConformsTo", "dctermsCreated",
-            "dctermsExtent", "dctermsHasFormat", "dctermsHasPart", "dctermsHasVersion", "dctermsIsFormatOf", "dctermsIsPartOf", "dctermsIsReferencedBy", "dctermsIsReplacedBy",
-            "dctermsIsRequiredBy", "dctermsIssued", "dctermsIsVersionOf", "dctermsMedium", "dctermsProvenance", "dctermsReferences", "dctermsReplaces", "dctermsRequires",
-            "dctermsSpatial", "dctermsTableOfContents", "dctermsTemporal", "edmCurrentLocation", "edmHasMet", "edmHasType", "edmIsRelatedTo", "edmType");
+    private static final Set<String> INCLUDE_PROXY_MAP_FIELDS = Set.of("dcContributor", "dcCoverage", "dcCreator", "dcDate", "dcDescription", "dcFormat","dcPublisher",
+            "dcRelation", "dcRights", "dcSource", "dcSubject", "dcTitle", "dcType", "dctermsAlternative", "dctermsCreated", "dctermsExtent", "dctermsHasPart", "dctermsHasVersion",
+            "dctermsIsFormatOf", "dctermsIsPartOf", "dctermsIsReferencedBy", "dctermsIsReplacedBy", "dctermsIsRequiredBy", "dctermsIssued", "dctermsMedium", "dctermsProvenance", "dctermsReferences",
+            "dctermsSpatial", "dctermsTemporal", "edmCurrentLocation", "edmHasMet");
 
     private static final List<String> ENTITIES = List.of("agents", "concepts", "places", "timespans");
 
-    // TODO still to be determined for now has dummy values
-    protected static final List<String> PRECENDANCE_LIST = List.of("de", "nl", "fr", "pt");
+    protected static final List<String> PRECENDANCE_LIST = List.of("sk", "hr", "pl", "ro", "it", "sv", "bg", "fr", "es", "cs", "de", "lv", "el", "fi", "nl", "hu", "da", "sl", "et", "pt", "lt", "ga");
 
     protected static final ReflectionUtils.FieldFilter proxyFieldFilter = field -> field.getType().isAssignableFrom(Map.class) &&
             INCLUDE_PROXY_MAP_FIELDS.contains(field.getName());
@@ -34,15 +32,18 @@ public abstract class BaseRecordService {
     /**
      * Function to get the lang-value map of the field from the proxy Object
      * @param proxy
+     * @param update if true, and the value is null for the field - It sets the empty map in the proxy object
+     *               for that field.
      * @return
      */
-    public static Function<String, Map<String, List<String>>> getValueOfTheField(Proxy proxy) {
+    public static Function<String, Map<String, List<String>>> getValueOfTheField(Proxy proxy, boolean update) {
         return e -> {
             Field field = ReflectionUtils.findField(proxy.getClass(), e);
             ReflectionUtils.makeAccessible(field);
             Object value = ReflectionUtils.getField(field, proxy);
-            // if the field doesn't exist, set an empty map in the proxy object
-            if (value == null) {
+            // If we are updating the proxy value, then for the field we must set an empty
+            // if it doesn't exist already. When we are just fetching the values, we need not alter anything in the proxy object
+            if (value == null && update) {
                 ReflectionUtils.setField(field, proxy, new LinkedHashMap<>());
                 value = ReflectionUtils.getField(field, proxy);
             }

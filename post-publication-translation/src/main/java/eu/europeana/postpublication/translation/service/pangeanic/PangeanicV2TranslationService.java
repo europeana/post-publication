@@ -15,10 +15,8 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -29,7 +27,6 @@ import java.util.*;
  * @author Srishti Singh
  */
 // TODO get api key, for now passed empty
-@Service
 @PropertySource("classpath:post-publication.properties")
 @PropertySource(value = "classpath:post-publication.user.properties", ignoreResourceNotFound = true)
 public class PangeanicV2TranslationService implements TranslationService {
@@ -39,26 +36,7 @@ public class PangeanicV2TranslationService implements TranslationService {
     @Value("${translation.pangeanic.endpoint.translate:}")
     protected String translateEndpoint;
 
-    @Autowired
-    protected PangeanicV2LangDetectService langDetectService;
-
     protected CloseableHttpClient translateClient;
-
-    public String getTranslateEndpoint() {
-        return translateEndpoint;
-    }
-
-    public void setTranslateEndpoint(String translateEndpoint) {
-        this.translateEndpoint = translateEndpoint;
-    }
-
-    public CloseableHttpClient getTranslateClient() {
-        return translateClient;
-    }
-
-    public void setTranslateClient(CloseableHttpClient translateClient) {
-        this.translateClient = translateClient;
-    }
 
     /**
      * Creates a new client that can send translation requests to Google Cloud Translate. Note that the client needs
@@ -109,6 +87,7 @@ public class PangeanicV2TranslationService implements TranslationService {
      */
     private List<String> translateWithLangDetect(List<String> texts, String targetLanguage, String langHint) throws TranslationException {
         try {
+            PangeanicV2LangDetectService langDetectService = new PangeanicV2LangDetectService();
             List<String> detectedLanguages = langDetectService.detectLang(texts, langHint);
             // create lang-value map for translation
             Map<String, List<String>> detectedLangValueMap = PangeanicTranslationUtils.getDetectedLangValueMap(texts, detectedLanguages);
