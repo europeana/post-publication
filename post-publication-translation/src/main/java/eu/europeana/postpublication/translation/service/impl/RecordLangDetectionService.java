@@ -3,6 +3,7 @@ package eu.europeana.postpublication.translation.service.impl;
 import eu.europeana.api.commons.error.EuropeanaApiException;
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
 import eu.europeana.corelib.definitions.edm.entity.Proxy;
+import eu.europeana.postpublication.translation.exception.InvalidParamValueException;
 import eu.europeana.postpublication.translation.model.*;
 import eu.europeana.postpublication.translation.service.LanguageDetectionService;
 import eu.europeana.postpublication.translation.utils.LanguageDetectionUtils;
@@ -77,7 +78,7 @@ public class RecordLangDetectionService extends BaseRecordService {
         // gather values from non-europeana proxy
         Proxy europeanaProxy = proxies.remove(0);
         if (!europeanaProxy.isEuropeanaProxy()) {
-            LOG.error("Unexpected data - first proxy is not Europeana proxy!");
+            LOG.error("Unexpected data - first proxy is not Europeana proxy! Record id - {} ", bean.getAbout());
             return bean;
         }
 

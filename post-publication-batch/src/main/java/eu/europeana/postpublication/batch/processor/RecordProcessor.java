@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 @Component
 public class RecordProcessor implements ItemProcessor<FullBean, FullBean> {
@@ -29,6 +30,10 @@ public class RecordProcessor implements ItemProcessor<FullBean, FullBean> {
     public FullBean process(@NotNull FullBean bean) throws Exception {
         bean = langDetectionService.detectLanguageForProxy(bean);
         bean = translateFilterService.translateProxyFields(bean, Language.ENGLISH);
+
+        // update the timestamp for the bean after processing
+        bean.setTimestampUpdated(new Date());
+
         return bean;
     }
 }

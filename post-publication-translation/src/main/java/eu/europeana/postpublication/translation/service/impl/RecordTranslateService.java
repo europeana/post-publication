@@ -83,7 +83,7 @@ public class RecordTranslateService extends BaseRecordService {
         }
 
         if (!proxies.get(0).isEuropeanaProxy()) {
-            LOG.error("Unexpected data - First proxy is not Europeana Proxy");
+            LOG.error("Unexpected data - first proxy is not Europeana proxy! Record id - {} ", bean.getAbout());
             return bean;
         }
 
@@ -98,6 +98,7 @@ public class RecordTranslateService extends BaseRecordService {
 
         // if chosen language is "en" do nothing, stop the translation workflow
         if (StringUtils.equals(language, Language.ENGLISH)) {
+            LOG.debug("Stop the translation workflow for record {}", bean.getAbout());
             return bean;
         }
 
@@ -109,6 +110,7 @@ public class RecordTranslateService extends BaseRecordService {
 
         // if no translation gathered return
         if (textToTranslate.isEmpty()) {
+            LOG.debug("No values gathered for translations. Stopping the translation workflow for record {}", bean.getAbout());
             return bean;
         }
 

@@ -81,7 +81,7 @@ public abstract class BaseRecordService {
                 List<ContextualClass> entities = (List<ContextualClass>) o;
                 for (ContextualClass entity : entities) {
                     if (StringUtils.equalsIgnoreCase(uri, entity.getAbout())) {
-                        LOG.debug(" Found matching entity {}", entity.getAbout());
+                        LOG.debug(" Found matching entity for {}", entity.getAbout());
                         matchingEntity.add(entity);
                         break;
                     }

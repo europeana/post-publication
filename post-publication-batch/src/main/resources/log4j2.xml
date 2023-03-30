@@ -15,7 +15,7 @@
         </Root>
         <Logger name="org.apache.http" level="INFO"/>
         <Logger name="eu.europeana.postpublication" level="DEBUG"/>
-        <Logger name="eu.europeana.postpublication.translation" level="DEBUG"/>
+        <Logger name="eu.europeana.postpublication.translation" level="INFO"/>
 
 
         <!--        &lt;!&ndash;Suppress unhelpful Spring Batch warnings.-->

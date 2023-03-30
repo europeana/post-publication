@@ -46,7 +46,7 @@ public class LanguageDetectionUtils {
             }
         }
         if (!lang.isEmpty()) {
-            LOG.debug("For record {} , fetched edm language : {} ", lang);
+            LOG.debug("EDM language - {} fetched for record - {} ", lang, bean.getAbout());
         }
         return lang;
     }
@@ -64,8 +64,9 @@ public class LanguageDetectionUtils {
             if (!map.isEmpty() && !map.keySet().isEmpty()) {
                 // if preflabel is present in other languages than "def" then do nothing
                 if (!map.isEmpty() && !map.keySet().isEmpty() && mapHasOtherLanguagesThanDef(map.keySet())) {
-                    LOG.debug("Entity {} already has language tagged values", entity.getAbout());
+                    LOG.debug("Entity {} already has language tagged values. PrefLabels NOT added...", entity.getAbout());
                 } else { // pick the def value
+                    LOG.debug("Entity {} has only non-language tagged values. Adding the prefLabels...", entity.getAbout());
                     prefLabels.addAll(map.get(Language.DEF));
                 }
             }
