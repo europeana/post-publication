@@ -85,7 +85,7 @@ public class TranslationMap extends LinkedHashMap<String, List<String>> {
             ComparatorUtils.removeDuplicates(values);
 
             translatedMap.add(entry.getKey(),values);
-            fromIndex = entry.getValue();
+            fromIndex += entry.getValue();
         }
 
         return translatedMap;
