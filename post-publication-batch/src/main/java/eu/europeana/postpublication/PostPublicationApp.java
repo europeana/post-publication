@@ -1,5 +1,7 @@
 package eu.europeana.postpublication;
 
+import eu.europeana.postpublication.config.SocksProxyActivator;
+import eu.europeana.postpublication.config.SocksProxyConfig;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
@@ -12,6 +14,8 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.autoconfigure.solr.SolrAutoConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.springframework.context.ConfigurableApplicationContext;
+
+import java.io.IOException;
 
 /**
  * Main application
@@ -44,7 +48,14 @@ public class PostPublicationApp {
      * @param args main application paramaters
      */
     public static void main(String[] args) {
+
+        // Activate socks proxy (if your application requires it)
+        SocksProxyActivator.activate(
+                new SocksProxyConfig("post-publication.properties", "post-publication.user.properties"));
+
         ConfigurableApplicationContext context =  SpringApplication.run(PostPublicationApp.class, args);
         System.exit(SpringApplication.exit(context));
     }
+
+
 }
