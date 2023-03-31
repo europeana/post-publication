@@ -3,6 +3,7 @@ package eu.europeana.postpublication.translation.service.impl;
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
 import eu.europeana.corelib.definitions.edm.entity.ContextualClass;
 import eu.europeana.corelib.definitions.edm.entity.Proxy;
+import eu.europeana.postpublication.translation.exception.InvalidParamValueException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,6 +29,23 @@ public abstract class BaseRecordService {
 
     protected static final ReflectionUtils.FieldFilter proxyFieldFilter = field -> field.getType().isAssignableFrom(Map.class) &&
             INCLUDE_PROXY_MAP_FIELDS.contains(field.getName());
+
+    /**
+     * Get the europeana proxy from the list of proxy
+     * There are records present where the first proxy is not always the europeana proxy
+     * @param proxies
+     * @param recordId
+     * @return
+     * @throws InvalidParamValueException
+     */
+    public static Proxy getEuropeanaProxy(List<? extends Proxy> proxies, String recordId) throws InvalidParamValueException {
+        Optional<? extends Proxy> europeanaProxy = proxies.stream().filter(Proxy :: isEuropeanaProxy).findFirst();
+        if (europeanaProxy.isPresent()) {
+            return europeanaProxy.get();
+        } else {
+            throw new InvalidParamValueException("Unexpected data - Europeana proxy not present! Record id - " +recordId);
+        }
+    }
 
     /**
      * Function to get the lang-value map of the field from the proxy Object

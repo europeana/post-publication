@@ -96,8 +96,6 @@ public class PangeanicV2TranslationService implements TranslationService {
             for (Map.Entry<String, List<String>> entry : detectedLangValueMap.entrySet()) {
                 if (PangeanicTranslationUtils.noTranslationRequired(entry.getKey())) {
                     LOG.debug("NOT translating data for lang {} for detected values {} ", entry.getKey(), entry.getValue());
-                    System.out.println(entry.getValue());
-
                 } else {
                     HttpPost translateRequest = PangeanicTranslationUtils.createTranslateRequest(translateEndpoint, entry.getValue(), targetLanguage, entry.getKey(), "");
                     translations.putAll(sendTranslateRequestAndParse(translateRequest));

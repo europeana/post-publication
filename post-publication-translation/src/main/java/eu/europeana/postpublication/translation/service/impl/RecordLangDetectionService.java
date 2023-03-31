@@ -3,7 +3,6 @@ package eu.europeana.postpublication.translation.service.impl;
 import eu.europeana.api.commons.error.EuropeanaApiException;
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
 import eu.europeana.corelib.definitions.edm.entity.Proxy;
-import eu.europeana.postpublication.translation.exception.InvalidParamValueException;
 import eu.europeana.postpublication.translation.model.*;
 import eu.europeana.postpublication.translation.service.LanguageDetectionService;
 import eu.europeana.postpublication.translation.utils.LanguageDetectionUtils;
@@ -75,12 +74,9 @@ public class RecordLangDetectionService extends BaseRecordService {
         }
         String langHint = getHintForLanguageDetect(bean);
 
-        // gather values from non-europeana proxy
-        Proxy europeanaProxy = proxies.remove(0);
-        if (!europeanaProxy.isEuropeanaProxy()) {
-            LOG.error("Unexpected data - first proxy is not Europeana proxy! Record id - {} ", bean.getAbout());
-            return bean;
-        }
+        // remove europeana proxy from the list
+        Proxy europeanaProxy = getEuropeanaProxy(proxies, bean.getAbout());
+        proxies.remove(europeanaProxy);
 
         // 1. gather all the "def" values for the whitelisted fields
         for (Proxy proxy : proxies) {
@@ -109,7 +105,7 @@ public class RecordLangDetectionService extends BaseRecordService {
             List<LanguageValueFieldMap> correctLangValueMap = LanguageDetectionUtils.getLangDetectedFieldValueMap(textsPerField, detectedLanguages, textsForDetection);
 
             // 6. add all the new language tagged values to europeana proxy
-            Proxy europeanProxy = bean.getProxies().get(0);
+            Proxy europeanProxy = getEuropeanaProxy(bean.getProxies(), bean.getAbout());
             updateProxy(europeanProxy, correctLangValueMap); // add the new lang-value map for europeana proxy
         }
         return bean;
@@ -128,7 +124,6 @@ public class RecordLangDetectionService extends BaseRecordService {
     private void updateProxy( Proxy proxy, List<LanguageValueFieldMap> correctLangMap) {
         correctLangMap.stream().forEach(value -> {
             Map<String, List<String>> map = getValueOfTheField(proxy, true).apply(value.getFieldName());
-
             // Now add the new lang-value map in the proxy
             for (Map.Entry<String, List<String>> entry : value.entrySet()) {
                 if (map.containsKey(entry.getKey())) {

@@ -26,7 +26,8 @@ public class ItemReaderConfig {
                 new RecordDatabaseReader(
                         batchRecordService, postPublicationSettings.getBatchChunkSize(),
                         // Fetch record whose timestampUpdated is more than currentStartTime
-                        Filters.gte("timestampUpdated", currentStartTime));
+                        Filters.gte("timestampUpdated", currentStartTime),
+                        Filters.eq("europeanaCollectionName", "925_Ministerul_Culturii_UMP")); // TODO this is added for trial testing. Will be removed later
         return threadSafeReader(reader);
     }
 

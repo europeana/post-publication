@@ -4,6 +4,7 @@ import eu.europeana.corelib.definitions.edm.beans.FullBean;
 import eu.europeana.corelib.definitions.edm.entity.ContextualClass;
 import eu.europeana.corelib.definitions.edm.entity.Proxy;
 import eu.europeana.corelib.utils.EuropeanaUriUtils;
+import eu.europeana.postpublication.translation.exception.InvalidParamValueException;
 import eu.europeana.postpublication.translation.exception.TranslationException;
 import eu.europeana.postpublication.translation.model.*;
 import eu.europeana.postpublication.translation.service.TranslationService;
@@ -74,18 +75,8 @@ public class RecordTranslateService extends BaseRecordService {
      *
      *
      */
-    public FullBean translateProxyFields(FullBean bean, String targetLanguage) throws TranslationException {
+    public FullBean translateProxyFields(FullBean bean, String targetLanguage) throws TranslationException, InvalidParamValueException {
         List<Proxy> proxies = new ArrayList<>(bean.getProxies()); // make sure we clone first so we can edit the list to our needs.
-        // Data/santity check
-        if (proxies.size() < 2) {
-            LOG.error("Unexpected data - expected at least 2 proxies, but found only {}!", proxies.size());
-            return bean;
-        }
-
-        if (!proxies.get(0).isEuropeanaProxy()) {
-            LOG.error("Unexpected data - first proxy is not Europeana proxy! Record id - {} ", bean.getAbout());
-            return bean;
-        }
 
         // 1. get the most representative language from all proxies
         Map<String, Integer> langCountMap = new HashMap<>();
@@ -107,7 +98,6 @@ public class RecordTranslateService extends BaseRecordService {
         for (Proxy proxy : proxies) {
             ReflectionUtils.doWithFields(proxy.getClass(), field -> getProxyValuesToTranslateForField(proxy, field, language, bean, textToTranslate), proxyFieldFilter);
         }
-
         // if no translation gathered return
         if (textToTranslate.isEmpty()) {
             LOG.debug("No values gathered for translations. Stopping the translation workflow for record {}", bean.getAbout());
@@ -116,9 +106,10 @@ public class RecordTranslateService extends BaseRecordService {
 
         // get the translation in the target language
         TranslationMap translations = textToTranslate.translate(translationService, targetLanguage);
-        Proxy europeanProxy = bean.getProxies().get(0);
+
         // add all the translated data to Europeana proxy
-        updateProxy(europeanProxy, translations);
+        Proxy europeanaProxy = getEuropeanaProxy(bean.getProxies(), bean.getAbout());
+        updateProxy(europeanaProxy, translations);
 
         return bean;
     }
