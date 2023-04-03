@@ -33,7 +33,7 @@ public class PostPublicationUpdateListener extends ItemListenerSupport<FullBean,
     }
 
     @Override
-    public void onWriteError(@NonNull Exception ex, @NonNull List<? extends FullBean> annoPages) {
-        logger.error("Error saving Records {}, ", getRecordIds(annoPages), ex);
+    public void onWriteError(@NonNull Exception ex, @NonNull List<? extends FullBean> recordIds) {
+        logger.error("Error saving Records {}, ", getRecordIds(recordIds), ex);
     }
 }

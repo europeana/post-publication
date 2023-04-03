@@ -59,7 +59,7 @@ public abstract class BaseRecordService {
             Field field = ReflectionUtils.findField(proxy.getClass(), e);
             ReflectionUtils.makeAccessible(field);
             Object value = ReflectionUtils.getField(field, proxy);
-            // If we are updating the proxy value, then for the field we must set an empty
+            // If we are updating the proxy value, then for the field we must set an empty map
             // if it doesn't exist already. When we are just fetching the values, we need not alter anything in the proxy object
             if (value == null && update) {
                 ReflectionUtils.setField(field, proxy, new LinkedHashMap<>());

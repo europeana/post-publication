@@ -1,5 +1,8 @@
 package eu.europeana.postpublication.service;
 
+import com.mongodb.MongoException;
+import com.mongodb.MongoSocketException;
+import com.mongodb.MongoTimeoutException;
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
 import eu.europeana.corelib.solr.bean.impl.FullBeanImpl;
 import eu.europeana.indexing.mongo.FullBeanUpdater;
@@ -38,15 +41,18 @@ public class FullBeanPublisher extends FullBeanUpdater {
      * @return
      * @throws MongoConnnectionException
      */
-    public List<String> publish(List<? extends FullBean> recordList) {
+    public List<String> publish(List<? extends FullBean> recordList) throws MongoConnnectionException {
             List<String> recordUpdates = new ArrayList<>();
-            for (FullBean record : recordList) {
-                // TODO test if something goes wrong here while saving do we still add the saved Full bean about ID,
-                //  That should not be added in the record updates list
-                //  ALSO see how the dates will be saved
-                FullBeanImpl savedFullBean = new FullBeanUpdater(fullBeanPreprocessor).update((FullBeanImpl) record, null,
-                        record.getTimestampCreated(), edmMongoClient);
-                recordUpdates.add(savedFullBean.getAbout());
+            try {
+                for (FullBean record : recordList) {
+                    FullBeanImpl savedFullBean = new FullBeanUpdater(fullBeanPreprocessor).update((FullBeanImpl) record, null,
+                            record.getTimestampCreated(), edmMongoClient);
+                    recordUpdates.add(savedFullBean.getAbout()); // only add the processed ones
+                }
+            } catch (MongoException e) { // for retry for connection issues throw MongoConnnectionException
+                if (e instanceof MongoSocketException || e instanceof MongoTimeoutException) {
+                    throw new MongoConnnectionException("Error while connecting to Mongo -"  +e.getMessage());
+                }
             }
             return recordUpdates;
     }

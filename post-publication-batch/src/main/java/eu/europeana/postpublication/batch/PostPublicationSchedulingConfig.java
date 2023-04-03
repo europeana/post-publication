@@ -51,12 +51,12 @@ public class PostPublicationSchedulingConfig implements InitializingBean {
 //                    toMinutesAndSeconds(ppSyncInterval));
 //        }
 
-       // schedulePeriodicAnnoSync();
+       // schedulePeriodicRecordSync();
     }
 
-    private void schedulePeriodicAnnoSync() {
+    private void schedulePeriodicRecordSync() {
         ppTaskScheduler.scheduleWithFixedDelay(
-                this::runScheduledAnnoSyncJob,
+                this::runScheduledRecordSyncJob,
                 Instant.now().plusSeconds(ppSyncInitialDelay),
                 Duration.ofSeconds(ppSyncInterval));
     }
@@ -64,7 +64,7 @@ public class PostPublicationSchedulingConfig implements InitializingBean {
     /**
      * Periodically run full entity updates.
      */
-    void runScheduledAnnoSyncJob() {
+    void runScheduledRecordSyncJob() {
         logger.info("Triggering scheduled Post publication pipeline job");
         try {
             String startTimeJobParam = "startTime";

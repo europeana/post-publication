@@ -102,6 +102,17 @@ public class PostPublicationJobConfig {
                 .build();
     }
 
+    /**
+     *  Few Points :
+     *
+     *  #processorNonTransactional :: Have marked the item processor as non-transactional (default is the opposite).
+     *  If this flag is set the results of item processing are cached across transactions in between retries and
+     *  during skip processing, otherwise the processor will be called in every transaction.
+     *  Hence, re-processing everything again and duplicating the values.
+     *
+     * @param start
+     * @return
+     */
     private Step migrateRecordsStep(Instant start) {
         return this.stepBuilderFactory
                 .get("migrateRecordsStep")
@@ -111,6 +122,7 @@ public class PostPublicationJobConfig {
                 .writer(recordWriter)
                 .listener((ItemProcessListener<? super FullBean, ? super FullBean>) postPublicationUpdateListener)
                 .faultTolerant()
+                .processorNonTransactional()
                 .retryLimit(postPublicationSettings.getRetryLimit())
                 .retry(MongoConnnectionException.class) // retry if MongoDb is down for some reason
                 .skipLimit(postPublicationSettings.getBatchSkipLimit())

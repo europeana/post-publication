@@ -1,11 +1,7 @@
 package eu.europeana.postpublication.batch.writer;
 
-import com.mongodb.MongoException;
-import com.mongodb.MongoSocketException;
-import com.mongodb.MongoTimeoutException;
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
 import eu.europeana.postpublication.batch.BatchSyncStats;
-import eu.europeana.postpublication.exception.MongoConnnectionException;
 import eu.europeana.postpublication.service.FullBeanPublisher;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.stereotype.Component;
@@ -26,19 +22,12 @@ public class RecordWriter implements ItemWriter<FullBean>{
 
     @Override
     public void write(@NotNull List<? extends FullBean> list) throws Exception {
-        try {
             List<String> recordsUpdated = publisher.publish(list);
             for (int i = 0; i < recordsUpdated.size(); i++) {
                 stats.addUpdated();
             }
             // failed
             addFailedRecords((list.size() - recordsUpdated.size()));
-
-        } catch (MongoException e) {
-            if (e instanceof MongoSocketException || e instanceof MongoTimeoutException) {
-                throw new MongoConnnectionException("Error while connecting to Mongo -"  +e.getMessage());
-            }
-        }
     }
 
     private void addFailedRecords(int failedRecordsSize) {
