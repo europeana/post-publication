@@ -15,6 +15,9 @@ public class PostPublicationSettings implements InitializingBean {
 
     private static final Logger logger = LogManager.getLogger(PostPublicationSettings.class);
 
+    @Value("${run.post.publication:#{true}}")
+    private Boolean isFrameworkEnabled;
+
     @Value("${mongo.read.connectionUrl}")
     private String mongoReadConnectionUrl;
 
@@ -58,6 +61,10 @@ public class PostPublicationSettings implements InitializingBean {
 
     @Value("${pp.intervalSeconds}")
     private int ppSyncInterval;
+
+    public boolean IsFrameworkEnabled() {
+        return isFrameworkEnabled;
+    }
 
     public String getMongoReadConnectionUrl() {
         return mongoReadConnectionUrl;

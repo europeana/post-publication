@@ -68,6 +68,10 @@ public class PostPublicationJobConfig {
 
     @Bean
     public Job syncRecords() {
+        if(!postPublicationSettings.IsFrameworkEnabled()) {
+            return null;
+        }
+
         PostPublicationJobMetadata jobMetadata = postPublicationJobMetaRepository.getMostRecentPostPublicationMetadata();
         Instant from = Instant.EPOCH;
 
