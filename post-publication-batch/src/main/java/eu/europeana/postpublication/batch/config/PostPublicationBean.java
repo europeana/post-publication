@@ -34,18 +34,5 @@ public class PostPublicationBean {
         return new ThreadPoolTaskScheduler();
     }
 
-    // TODO see if we need to add mongoBatchConfigurer
-
-    //    /**
-//     * Configures Spring Batch to use Mongo
-//     *
-//     * @param datastore Morphia datastore for Spring Batch
-//     * @return BatchConfigurer instance
-//     */
-//    @Bean
-//    public MongoBatchConfigurer mongoBatchConfigurer(
-//            @Qualifier(AppConstants.BEAN_BATCH_DATA_STORE) Datastore datastore) {
-//        return new MongoBatchConfigurer(datastore, defaultTaskExecutor);
-//    }
 }
 

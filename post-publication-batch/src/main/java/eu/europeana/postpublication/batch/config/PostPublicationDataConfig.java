@@ -9,8 +9,6 @@ import eu.europeana.metis.mongo.dao.RecordDao;
 import eu.europeana.postpublication.translation.service.LanguageDetectionService;
 import eu.europeana.postpublication.translation.service.pangeanic.PangeanicV2LangDetectService;
 import eu.europeana.postpublication.translation.service.pangeanic.PangeanicV2TranslationService;
-import eu.europeana.postpublication.translation.service.impl.RecordLangDetectionService;
-import eu.europeana.postpublication.translation.service.impl.RecordTranslateService;
 import eu.europeana.postpublication.translation.service.TranslationService;
 import eu.europeana.postpublication.utils.AppConstants;
 import org.apache.commons.lang3.tuple.Pair;
@@ -65,8 +63,7 @@ public class PostPublicationDataConfig {
     @Bean(name = AppConstants.RECORD_DAO)
     public RecordDao recordDao() {
         logger.info("Configuring writer database: {}", settings.getWriteDatabase());
-        RecordDao recordDao = new RecordDao(MongoClients.create(settings.getMongoWriteConnectionUrl()), settings.getWriteDatabase(), true);
-        return recordDao;
+        return new RecordDao(MongoClients.create(settings.getMongoWriteConnectionUrl()), settings.getWriteDatabase(), true);
     }
 
     @Bean(name = AppConstants.BEAN_WRITER_DATA_STORE)

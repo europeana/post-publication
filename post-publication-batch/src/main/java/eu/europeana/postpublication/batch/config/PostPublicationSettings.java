@@ -1,8 +1,6 @@
 package eu.europeana.postpublication.batch.config;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -12,8 +10,6 @@ import org.springframework.context.annotation.PropertySource;
 @PropertySource("classpath:post-publication.properties")
 @PropertySource(value = "classpath:post-publication.user.properties", ignoreResourceNotFound = true)
 public class PostPublicationSettings implements InitializingBean {
-
-    private static final Logger logger = LogManager.getLogger(PostPublicationSettings.class);
 
     @Value("${run.post.publication:#{true}}")
     private Boolean isFrameworkEnabled;

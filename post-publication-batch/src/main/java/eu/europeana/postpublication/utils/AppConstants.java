@@ -3,6 +3,9 @@ package eu.europeana.postpublication.utils;
 public class AppConstants {
 
 
+    private AppConstants() {
+    }
+
     public static final String BEAN_BATCH_RECORD_SERVICE = "batchRecordSevice";
 
     public static final String BEAN_BATCH_DATA_STORE = "batchDataStore";

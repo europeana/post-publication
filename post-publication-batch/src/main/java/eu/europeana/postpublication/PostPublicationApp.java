@@ -12,10 +12,7 @@ import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.solr.SolrAutoConfiguration;
-import org.apache.logging.log4j.LogManager;
 import org.springframework.context.ConfigurableApplicationContext;
-
-import java.io.IOException;
 
 /**
  * Main application

@@ -1,16 +1,11 @@
 package eu.europeana.postpublication.translation.model;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import javax.annotation.Nonnull;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class LanguageValueFieldMap extends LinkedHashMap<String, List<String>> {
-
-    private static final Logger LOG = LogManager.getLogger(LanguageValueFieldMap.class);
 
     @Nonnull
     private final String fieldName;

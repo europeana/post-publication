@@ -6,9 +6,12 @@ import java.util.List;
 
 public class BatchUtils {
 
+    private BatchUtils() {
+    }
+
     public static String[] getRecordIds(List<? extends FullBean> batchRecords) {
         return batchRecords.stream()
-                .map(record -> record.getAbout())
+                .map(FullBean::getAbout)
                 .toArray(String[]::new);
     }
 

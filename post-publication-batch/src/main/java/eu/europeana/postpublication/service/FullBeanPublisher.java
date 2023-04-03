@@ -44,9 +44,9 @@ public class FullBeanPublisher extends FullBeanUpdater {
     public List<String> publish(List<? extends FullBean> recordList) throws MongoConnnectionException {
             List<String> recordUpdates = new ArrayList<>();
             try {
-                for (FullBean record : recordList) {
-                    FullBeanImpl savedFullBean = new FullBeanUpdater(fullBeanPreprocessor).update((FullBeanImpl) record, null,
-                            record.getTimestampCreated(), edmMongoClient);
+                for (FullBean fullBean : recordList) {
+                    FullBeanImpl savedFullBean = new FullBeanUpdater(fullBeanPreprocessor).update((FullBeanImpl) fullBean, null,
+                            fullBean.getTimestampCreated(), edmMongoClient);
                     recordUpdates.add(savedFullBean.getAbout()); // only add the processed ones
                 }
             } catch (MongoException e) { // for retry for connection issues throw MongoConnnectionException

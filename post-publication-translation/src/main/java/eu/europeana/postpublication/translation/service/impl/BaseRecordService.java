@@ -30,6 +30,10 @@ public abstract class BaseRecordService {
     protected static final ReflectionUtils.FieldFilter proxyFieldFilter = field -> field.getType().isAssignableFrom(Map.class) &&
             INCLUDE_PROXY_MAP_FIELDS.contains(field.getName());
 
+
+    private BaseRecordService() {
+    }
+
     /**
      * Get the europeana proxy from the list of proxy
      * There are records present where the first proxy is not always the europeana proxy

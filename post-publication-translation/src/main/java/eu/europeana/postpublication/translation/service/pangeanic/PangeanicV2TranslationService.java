@@ -26,7 +26,7 @@ import java.util.*;
  * Service to send data to translate to Pangeanic Translate API V2
  * @author Srishti Singh
  */
-// TODO get api key, for now passed empty
+// TODO get api key, for now passed empty, also determine score logic , also isSupported method logic
 @PropertySource("classpath:post-publication.properties")
 @PropertySource(value = "classpath:post-publication.user.properties", ignoreResourceNotFound = true)
 public class PangeanicV2TranslationService implements TranslationService {
@@ -53,12 +53,10 @@ public class PangeanicV2TranslationService implements TranslationService {
         LOG.info("Pangeanic translation service is initialized with translate Endpoint - {}", translateEndpoint);
     }
 
-    // TODO logic yet to be identified, for now return true for every pair
     @Override
     public boolean isSupported(String srcLang, String trgLang) {
         return true;
     }
-
 
     @Override
     public List<String> translate(List<String> texts, String targetLanguage, String sourceLanguage, boolean detect) throws TranslationException {
@@ -107,8 +105,6 @@ public class PangeanicV2TranslationService implements TranslationService {
         }
     }
 
-
-    // TODO score logic still pending
     private Map<String, String> sendTranslateRequestAndParse(HttpPost post) throws IOException, JSONException, TranslationException {
         try (CloseableHttpResponse response = translateClient.execute(post)) {
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
