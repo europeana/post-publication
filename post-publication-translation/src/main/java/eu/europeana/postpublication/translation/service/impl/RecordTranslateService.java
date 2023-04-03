@@ -128,14 +128,15 @@ public class RecordTranslateService extends BaseRecordService {
                         .collect(Collectors.groupingBy(Map.Entry::getValue, Collectors.mapping(Map.Entry::getKey, Collectors.toList())));
         List<String> languagesWithMostvalues = reverseMap.get(Collections.max(reverseMap.keySet()));
         // if there is a tie between more than one language, choose based on the precedance list
-        // TODO check if the precedance list doesn't have the most representative languages then what to do
         if (languagesWithMostvalues.size() > 1) {
             Optional<String> langWithHigherPrecedance =  PRECENDANCE_LIST.stream().filter(languagesWithMostvalues :: contains).findFirst();
             if (langWithHigherPrecedance.isPresent()) {
                 return langWithHigherPrecedance.get();
             }
         }
-        // will only have one value here, hence by default or any else case return the first language
+        // will only have one value here, hence by default or any else case return the first language.
+        // Also if we had multiple values and those languages were not present in the precedence list (this is an exceptional case, should not happen)
+        // but in those cases as well just any random value is acceptable( we will return the first language)
         return languagesWithMostvalues.get(0);
     }
 
