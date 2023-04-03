@@ -13,12 +13,7 @@
 
     <artifactId>post-publication-batch</artifactId>
     <description>The Web Module of the Post Publication API</description>
-    <packaging>war</packaging>
-
-    <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-    </properties>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -41,6 +36,38 @@
             <artifactId>spring-boot-starter-tomcat</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>eu.europeana.api</groupId>
+            <artifactId>post-publication-translation</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>eu.europeana.api</groupId>
+            <artifactId>spring-batch-mongo</artifactId>
+            <version>${springbatch.mongo.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>eu.europeana.corelib</groupId>
+            <artifactId>corelib-record</artifactId>
+            <version>${corelib.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>eu.europeana.metis</groupId>
+            <artifactId>metis-indexing</artifactId>
+            <version>${metis.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>eu.europeana.metis</groupId>
+                    <artifactId>metis-common-solr</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>eu.europeana.api.commons</groupId>
+            <artifactId>commons-error</artifactId>
+            <version>${api.commons.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -57,9 +84,6 @@
                         <goals>
                             <goal>repackage</goal>
                         </goals>
-                        <configuration>
-                            <classifier>executable</classifier>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

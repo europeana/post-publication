@@ -15,8 +15,10 @@
         </Root>
         <Logger name="org.apache.http" level="INFO"/>
         <Logger name="eu.europeana.postpublication" level="DEBUG"/>
+        <Logger name="eu.europeana.postpublication.translation" level="INFO"/>
 
-<!--        &lt;!&ndash;Suppress unhelpful Spring Batch warnings.-->
+
+        <!--        &lt;!&ndash;Suppress unhelpful Spring Batch warnings.-->
 <!--        See https://stackoverflow.com/questions/23780587/spring-batch-reader-in-multi-threader-job &ndash;&gt;-->
 <!--        <Logger name="org.springframework.batch.core.step" level="ERROR"/>-->
 
