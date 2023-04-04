@@ -4,7 +4,7 @@ metadata:
   name: post-publication-migration-job
 spec:
   schedule: "${POST_PUBLICATION_CRON_SCHEDULE}"
-  suspend: "${SUSPEND_POST_PUBLICATION}"
+  suspend: ${SUSPEND_POST_PUBLICATION}
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
