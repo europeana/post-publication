@@ -167,7 +167,7 @@ public class RecordTranslateService extends BaseRecordService {
      */
 
     private boolean languageToBeChosen(String lang, String targetLanguage) {
-        return !(StringUtils.equalsIgnoreCase(lang, Language.NO_LINGUISTIC_CONTENT) || StringUtils.equalsIgnoreCase(lang, Language.DEF))
+        return !(StringUtils.equals(lang, Language.NO_LINGUISTIC_CONTENT) || StringUtils.equals(lang, Language.DEF))
                 && translationService.isSupported(lang, targetLanguage);
     }
 
