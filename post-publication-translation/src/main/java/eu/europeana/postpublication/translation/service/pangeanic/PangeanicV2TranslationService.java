@@ -1,8 +1,11 @@
 package eu.europeana.postpublication.translation.service.pangeanic;
 
+import static eu.europeana.postpublication.translation.utils.PangeanicTranslationUtils.SUPPORTED_LANGUAGES;
 import eu.europeana.postpublication.translation.exception.TranslationException;
+import eu.europeana.postpublication.translation.model.Language;
 import eu.europeana.postpublication.translation.service.TranslationService;
 import eu.europeana.postpublication.translation.utils.PangeanicTranslationUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -26,7 +29,7 @@ import java.util.*;
  * Service to send data to translate to Pangeanic Translate API V2
  * @author Srishti Singh
  */
-// TODO get api key, for now passed empty, also determine score logic , also isSupported method logic
+// TODO get api key, for now passed empty, also determine score logic
 @PropertySource("classpath:post-publication.properties")
 @PropertySource(value = "classpath:post-publication.user.properties", ignoreResourceNotFound = true)
 public class PangeanicV2TranslationService implements TranslationService {
@@ -53,9 +56,18 @@ public class PangeanicV2TranslationService implements TranslationService {
         LOG.info("Pangeanic translation service is initialized with translate Endpoint - {}", translateEndpoint);
     }
 
+    /**
+     * target language should be English for Pangeanic Translations
+     * and validate the source language with list of supported languages
+     *
+     * @param srcLang source language of the data to be translated
+     * @param trgLang target language in which data has to be translated
+     * @return
+     */
     @Override
     public boolean isSupported(String srcLang, String trgLang) {
-        return true;
+        return SUPPORTED_LANGUAGES.contains(srcLang) && StringUtils.equals(trgLang, Language.ENGLISH);
+
     }
 
     @Override

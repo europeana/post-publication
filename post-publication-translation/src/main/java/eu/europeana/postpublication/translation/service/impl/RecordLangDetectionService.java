@@ -44,7 +44,11 @@ public class RecordLangDetectionService extends BaseRecordService {
         if (!edmLanguages.isEmpty()) {
             String edmLang = edmLanguages.get(0).name().toLowerCase(Locale.ROOT);
             if (detectionService.isSupported(edmLang)) {
+                LOG.debug("For record {}, hint for lang-detection is {} ", bean.getAbout(), edmLang);
                 return edmLang;
+            } else {
+                LOG.debug("For record {}, edmLanguage - {} , is NOT supported by lang detection service", bean.getAbout(), edmLang);
+
             }
         }
         return null;

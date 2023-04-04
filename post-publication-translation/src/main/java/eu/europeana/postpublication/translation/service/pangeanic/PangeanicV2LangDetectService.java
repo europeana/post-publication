@@ -1,5 +1,6 @@
 package eu.europeana.postpublication.translation.service.pangeanic;
 
+import static eu.europeana.postpublication.translation.utils.PangeanicTranslationUtils.SUPPORTED_LANGUAGES;
 import eu.europeana.postpublication.translation.exception.TranslationException;
 import eu.europeana.postpublication.translation.service.LanguageDetectionService;
 import eu.europeana.postpublication.translation.utils.PangeanicTranslationUtils;
@@ -53,10 +54,9 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
         LOG.info("Pangeanic Language Detection service is initialized with detect language Endpoint - {}", detectEndpoint);
     }
 
-    // TODO logic yet to be identified, for now return true for every pair
     @Override
     public boolean isSupported(String srcLang) {
-        return true;
+       return SUPPORTED_LANGUAGES.contains(srcLang);
     }
 
     @Override

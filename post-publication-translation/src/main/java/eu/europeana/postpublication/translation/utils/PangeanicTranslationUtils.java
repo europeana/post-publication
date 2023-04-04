@@ -20,6 +20,8 @@ public class PangeanicTranslationUtils {
 
     private static final Logger LOG = LogManager.getLogger(PangeanicTranslationUtils.class);
 
+    public static final Set<String> SUPPORTED_LANGUAGES = Set.of("sk", "hr", "pl", "ro", "it", "sv", "bg", "fr", "es", "cs", "de", "lv",
+            "el", "fi", "nl", "hu", "da", "sl", "et", "pt", "lt", "ga");
 
     public static final int MAX_CONNECTIONS = 100;
     public static final int MAX_CONNECTIONS_PER_ROUTE = 100;
