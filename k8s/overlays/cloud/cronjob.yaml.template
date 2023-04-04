@@ -22,14 +22,14 @@ spec:
               env:
                 - name: SPRING_CONFIG_ADDITIONAL_LOCATION
                   value: "file:/opt/app/config/post-publication.user.properties"
-                 - name: JAVA_OPTS
-                   value: "-javaagent:\"/usr/local/elastic-apm-agent.jar\"
-                           -Delastic.apm.application_packages=${ELASTIC_APP_PACKAGES}
-                           -Delastic.apm.server_urls=${ELASTIC_APM_SERVERS}
-                           -Delastic.apm.service_name=${APP_NAME}
-                           -Delastic.apm.enabled=${COLLECT_LOGS}
-                           -Delastic.apm.environment=${K8S_NAMESPACE}
-                           -XX:+UseParallelGC -XX:MaxRAMPercentage=75"
+                - name: JAVA_OPTS
+                  value: "-javaagent:\"/usr/local/elastic-apm-agent.jar\"
+                          -Delastic.apm.application_packages=${ELASTIC_APP_PACKAGES}
+                          -Delastic.apm.server_urls=${ELASTIC_APM_SERVERS}
+                          -Delastic.apm.service_name=${APP_NAME}
+                          -Delastic.apm.enabled=${COLLECT_LOGS}
+                          -Delastic.apm.environment=${K8S_NAMESPACE}
+                          -XX:+UseParallelGC -XX:MaxRAMPercentage=75"
               resources:
                 requests:
                   memory: "${POST_PUBLICATION_MEMORY}M"
