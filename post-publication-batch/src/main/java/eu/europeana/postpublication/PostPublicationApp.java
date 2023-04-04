@@ -4,6 +4,7 @@ import eu.europeana.postpublication.config.SocksProxyActivator;
 import eu.europeana.postpublication.config.SocksProxyConfig;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
@@ -12,6 +13,7 @@ import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.solr.SolrAutoConfiguration;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
 /**
@@ -50,7 +52,11 @@ public class PostPublicationApp {
         SocksProxyActivator.activate(
                 new SocksProxyConfig("post-publication.properties", "post-publication.user.properties"));
 
-        ConfigurableApplicationContext context =  SpringApplication.run(PostPublicationApp.class, args);
+        // disable web server since we're only running an update task
+        ConfigurableApplicationContext context =
+                new SpringApplicationBuilder(PostPublicationApp.class)
+                        .web(WebApplicationType.NONE)
+                        .run(args);
         System.exit(SpringApplication.exit(context));
     }
 

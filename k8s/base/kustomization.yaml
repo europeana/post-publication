@@ -1,0 +1,7 @@
+commonLabels:
+  app: post-publication
+
+configMapGenerator:
+  - name: post-publication-config
+    files:
+      - post-publication.user.properties

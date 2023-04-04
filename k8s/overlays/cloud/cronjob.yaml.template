@@ -1,0 +1,56 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: post-publication-migration-job
+spec:
+  schedule: "${POST_PUBLICATION_CRON_SCHEDULE}"
+  suspend: "${SUSPEND_POST_PUBLICATION}"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 60
+      template:
+        spec:
+          containers:
+            - name: post-publication
+              image: europeana/post-publication
+              imagePullPolicy: Always
+              command:
+                - java
+                - -jar
+                - /opt/app/post-publication-api.jar
+              env:
+                - name: SPRING_CONFIG_ADDITIONAL_LOCATION
+                  value: "file:/opt/app/config/post-publication.user.properties"
+                 - name: JAVA_OPTS
+                   value: "-javaagent:\"/usr/local/elastic-apm-agent.jar\"
+                           -Delastic.apm.application_packages=${ELASTIC_APP_PACKAGES}
+                           -Delastic.apm.server_urls=${ELASTIC_APM_SERVERS}
+                           -Delastic.apm.service_name=${APP_NAME}
+                           -Delastic.apm.enabled=${COLLECT_LOGS}
+                           -Delastic.apm.environment=${K8S_NAMESPACE}
+                           -XX:+UseParallelGC -XX:MaxRAMPercentage=75"
+              resources:
+                requests:
+                  memory: "${POST_PUBLICATION_MEMORY}M"
+                  cpu: "${POST_PUBLICATION_CPU}m"
+                limits:
+                  memory: "${POST_PUBLICATION_MEMORY}M"
+                  cpu: "${POST_PUBLICATION_CPU}m"
+              volumeMounts:
+                - name: post-publication-properties
+                  mountPath: "/opt/app/config/post-publication.user.properties"
+                  readOnly: true
+                  subPath: post-publication.user.properties
+                - name: ibm-batch-certficate
+                  mountPath: "/opt/app/config/ibm-databases-truststore.jks"
+                  readOnly: true
+                  subPath: ibm-databases-truststore.jks
+          restartPolicy: Never
+          volumes:
+            - name: post-publication-properties
+              configMap:
+                name: post-publication-config
+            - name: ibm-batch-certficate
+              configMap:
+                name: ibm-secret-config-map

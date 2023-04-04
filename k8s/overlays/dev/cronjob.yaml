@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: post-publication-migration-job
+spec:
+  schedule: "@hourly"
+  suspend: false
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 60
+      template:
+        spec:
+          containers:
+            - name: post-publication
+              image: europeana/post-publication
+              imagePullPolicy: Always
+              command:
+                - java
+                - -jar
+                - /opt/app/post-publication-api.jar
+              env:
+                - name: SPRING_CONFIG_ADDITIONAL_LOCATION
+                  value: "file:/opt/app/config/post-publication.user.properties"
+              volumeMounts:
+                - name: post-publication-properties
+                  mountPath: "/opt/app/config/post-publication.user.properties"
+                  readOnly: true
+                  subPath: post-publication.user.properties
+          restartPolicy: Never
+          volumes:
+            - name: post-publication-properties
+              configMap:
+                name: post-publication-config

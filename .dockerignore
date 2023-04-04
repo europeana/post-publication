@@ -1,0 +1,7 @@
+# Ensure no sensitive files are included in jar
+**
+!/post-publication-batch/target/post-publication-batch.jar
+# Any type of properties file should not be uploaded to Docker hub
+**/*.jks
+**/*.user.properties
+**/*.properties

@@ -1,0 +1,12 @@
+resources:
+  - ../../base
+  - cronjob.yaml
+
+commonLabels:
+  app:  post-publication-api
+
+
+configMapGenerator:
+  - name: ibm-secret-config-map
+    files:
+      - ibm-databases-truststore.jks
