@@ -30,6 +30,8 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
 
     protected static final Logger LOG = LogManager.getLogger(PangeanicV2LangDetectService.class);
 
+    private static final double THRESHOLD = 0.5;
+
     @Value("${translation.pangeanic.endpoint.detect:}")
     protected String detectEndpoint;
 
@@ -69,7 +71,17 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
         }
     }
 
-    // TODO score logic still pending
+    /**
+     * Send the request to Pangeanic and parses the response in the list of strings
+     * NOTE : We do not accept results if the threshold is lower than 0.5
+     * For anything not recognised or present or not acceptable , we add null values in the list
+     *
+     * @param post http post request with body
+     * @return list of languages detected in the same sequence
+     * @throws IOException
+     * @throws JSONException
+     * @throws TranslationException
+     */
     private List<String> sendDetectRequestAndParse(HttpPost post) throws IOException, JSONException, TranslationException {
         try (CloseableHttpResponse response = translateClient.execute(post)) {
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
@@ -86,8 +98,14 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
                 JSONArray detectedLangs = obj.getJSONArray(PangeanicTranslationUtils.DETECTED_LANGUAGE);
                 for (int i = 0; i < detectedLangs.length(); i++) {
                     JSONObject object = (JSONObject) detectedLangs.get(i);
-                    if (object.has(PangeanicTranslationUtils.SOURCE_DETECTED)) {
-                        result.add(object.getString(PangeanicTranslationUtils.SOURCE_DETECTED));
+                    if (hasLanguageAndScoreDetected(object)) {
+                        double langScore = object.getDouble(PangeanicTranslationUtils.SOURCE_LANG_SCORE);
+                        // if lang detected is lower than 0.5 score then don't accept the results
+                        if (langScore > THRESHOLD) {
+                            result.add(object.getString(PangeanicTranslationUtils.SOURCE_DETECTED));
+                        } else {
+                            result.add(null);
+                        }
                     } else {
                         // when no detected lang is returned. Ideally, this should not happen
                         // But there are time Pangeanic returns no src_detected value
@@ -98,6 +116,10 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
                 return result;
             }
         }
+    }
+
+    private boolean hasLanguageAndScoreDetected(JSONObject object) {
+        return object.has(PangeanicTranslationUtils.SOURCE_DETECTED) && object.has(PangeanicTranslationUtils.SOURCE_LANG_SCORE);
     }
 
     @Override

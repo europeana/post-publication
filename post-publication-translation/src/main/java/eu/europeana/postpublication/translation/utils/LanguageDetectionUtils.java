@@ -116,7 +116,7 @@ public class LanguageDetectionUtils {
                 } else {
                     List<String> values = new ArrayList<>();
                     values.add(textsForDetection.get(counter));
-                    newValueMap.put(detectedLanguages.get(counter), values);
+                    newValueMap.put(newLang, values);
                 }
                 counter++;
             }

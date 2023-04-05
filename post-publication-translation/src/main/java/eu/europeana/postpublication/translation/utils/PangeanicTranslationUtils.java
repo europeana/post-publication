@@ -42,6 +42,7 @@ public class PangeanicTranslationUtils {
 
     //detect endpoint response fields
     public static final String SOURCE_DETECTED = "src_detected";
+    public static final String SOURCE_LANG_SCORE = "src_lang_score";
     public static final String DETECTED_LANGUAGE = "detected_langs";
 
     private PangeanicTranslationUtils() {

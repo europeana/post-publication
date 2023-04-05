@@ -7,6 +7,7 @@ import eu.europeana.postpublication.translation.model.*;
 import eu.europeana.postpublication.translation.service.LanguageDetectionService;
 import eu.europeana.postpublication.translation.utils.LanguageDetectionUtils;
 import org.apache.commons.lang3.SerializationUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
@@ -105,12 +106,15 @@ public class RecordLangDetectionService extends BaseRecordService {
             // 4. send lang-detect request
             List<String> detectedLanguages = detectionService.detectLang(textsForDetection, langHint);
             LOG.debug("Detected languages - {} ", detectedLanguages);
-            //5. assign language attributes to the values
+
+            //5. assign language attributes to the values. This map may contain "def" tag values.
+            // As for the unidentified languages or unacceptable threshold values the service returns null
+            // and the source value is retained which is "def" in our case
             List<LanguageValueFieldMap> correctLangValueMap = LanguageDetectionUtils.getLangDetectedFieldValueMap(textsPerField, detectedLanguages, textsForDetection);
 
             // 6. add all the new language tagged values to europeana proxy
             Proxy europeanProxy = getEuropeanaProxy(bean.getProxies(), bean.getAbout());
-            updateProxy(europeanProxy, correctLangValueMap); // add the new lang-value map for europeana proxy
+            updateProxy(europeanProxy, correctLangValueMap);
         }
         return bean;
     }
@@ -122,6 +126,8 @@ public class RecordLangDetectionService extends BaseRecordService {
 
     /**
      * Updates the proxy object field values by adding the new map values
+     *
+     * NOTE : Only add language tagged values.
      * @param proxy
      * @param correctLangMap
      */
@@ -130,10 +136,12 @@ public class RecordLangDetectionService extends BaseRecordService {
             Map<String, List<String>> map = getValueOfTheField(proxy, true).apply(value.getFieldName());
             // Now add the new lang-value map in the proxy
             for (Map.Entry<String, List<String>> entry : value.entrySet()) {
-                if (map.containsKey(entry.getKey())) {
-                    map.get(entry.getKey()).addAll(entry.getValue());
-                } else {
-                    map.put(entry.getKey(), entry.getValue());
+                if (!StringUtils.equals(entry.getKey(), Language.DEF)) {
+                    if (map.containsKey(entry.getKey())) {
+                        map.get(entry.getKey()).addAll(entry.getValue());
+                    } else {
+                        map.put(entry.getKey(), entry.getValue());
+                    }
                 }
             }
         });
