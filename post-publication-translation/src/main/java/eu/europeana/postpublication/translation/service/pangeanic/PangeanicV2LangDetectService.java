@@ -1,6 +1,5 @@
 package eu.europeana.postpublication.translation.service.pangeanic;
 
-import static eu.europeana.postpublication.translation.utils.PangeanicTranslationUtils.SUPPORTED_LANGUAGES;
 import eu.europeana.postpublication.translation.exception.TranslationException;
 import eu.europeana.postpublication.translation.service.LanguageDetectionService;
 import eu.europeana.postpublication.translation.utils.PangeanicTranslationUtils;
@@ -37,10 +36,6 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
 
     protected CloseableHttpClient translateClient;
 
-    public String getDetectEndpoint() {
-        return detectEndpoint;
-    }
-
     /**
      * Creates a new client that can send translation requests to Google Cloud Translate. Note that the client needs
      * to be closed when it's not used anymore
@@ -58,7 +53,7 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
 
     @Override
     public boolean isSupported(String srcLang) {
-       return SUPPORTED_LANGUAGES.contains(srcLang);
+       return PangeanicLanguages.isLanguageSupported(srcLang);
     }
 
     @Override
