@@ -132,8 +132,11 @@ public class PangeanicV2TranslationService implements TranslationService {
                     if (hasTranslations(object)) {
                         double score = object.getDouble(PangeanicTranslationUtils.TRANSLATE_SCORE);
                         // only if score returned by the translation service is greater the threshold value, we will accept the translations
-                        if (score > PangeanicLanguages.getThresholdForLanguage(sourceLanguage)){
+                        if (score > PangeanicLanguages.getThresholdForLanguage(sourceLanguage)) {
                             results.put(object.getString(PangeanicTranslationUtils.TRANSLATE_SOURCE), object.getString(PangeanicTranslationUtils.TRANSLATE_TARGET));
+                        } else {
+                            // for discarded thresholds add null as translations values
+                            results.put(object.getString(PangeanicTranslationUtils.TRANSLATE_SOURCE), null);
                         }
                     }
                 }

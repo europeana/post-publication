@@ -79,9 +79,11 @@ public class TranslationMap extends LinkedHashMap<String, List<String>> {
         int fromIndex =0;
         for (Map.Entry<String, Integer> entry : textsPerField.entrySet()) {
             int toIndex = fromIndex + entry.getValue();
-            // remove duplicates per field
             List<String> values = new ArrayList<>();
             values.addAll(translations.subList(fromIndex, toIndex));
+            // remove null values for discarded translations due to lower thresholds
+            values.removeIf(Objects::isNull);
+            // remove duplicates per field
             ComparatorUtils.removeDuplicates(values);
 
             translatedMap.add(entry.getKey(),values);
