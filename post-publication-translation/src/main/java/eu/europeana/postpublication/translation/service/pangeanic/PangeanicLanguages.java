@@ -18,11 +18,11 @@ import java.util.stream.Stream;
  */
 public enum PangeanicLanguages {
 
-    SK(87.40), RO(85.45), BG(86.78), PL(87.10), HR(89.01),
-    SV(78.50), FR(86.50), IT(82.46), ES(82.13), CS(84.10),
-    DE(82.88), LV(78.84), NL(77.57), EL(80.09), FI(79.75),
-    DA(75.48), SL(75.14), HU(77.79), PT(72.43), ET(74.24),
-    LT(65.38), GA(86.50);
+    SK(0.8740), RO(0.8545), BG(0.8678), PL(0.8710), HR(0.8901),
+    SV(0.7850), FR(0.8650), IT(0.8246), ES(0.8213), CS(0.8410),
+    DE(0.8288), LV(0.7884), NL(0.7757), EL(0.8009), FI(0.7975),
+    DA(0.7548), SL(0.7514), HU(0.7779), PT(0.7243), ET(0.7424),
+    LT(0.6538), GA(0.8650);
 
     private final double translationThresholds;
 
@@ -79,7 +79,7 @@ public enum PangeanicLanguages {
      */
     public static boolean isLanguagePairSupported(String srourceLang, String targetLang) {
         if (!StringUtils.equals(targetLang, Language.ENGLISH)) {
-            LOG.error("For Pangeanic Translations target language must always be 'en' - {}" , targetLang);
+            LOG.error("For Pangeanic Translations target language must always be 'en' - {}", targetLang);
             return false;
         }
         return TRANSLATION_PAIRS.contains(new LanguagePair(srourceLang.toUpperCase(Locale.ROOT), targetLang.toUpperCase(Locale.ROOT)));
