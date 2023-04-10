@@ -9,6 +9,7 @@ import org.springframework.batch.item.support.SynchronizedItemStreamReader;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Instant;
+import java.util.List;
 
 @Configuration
 public class ItemReaderConfig {
@@ -21,7 +22,7 @@ public class ItemReaderConfig {
         this.postPublicationSettings = postPublicationSettings;
     }
 
-    public SynchronizedItemStreamReader<FullBean> createRecordReader(Instant currentStartTime) {
+    public SynchronizedItemStreamReader<FullBean> createRecordReader(Instant currentStartTime, List<String> datasetToProcess) {
 
         RecordDatabaseReader reader =
                 new RecordDatabaseReader(
@@ -29,7 +30,7 @@ public class ItemReaderConfig {
                         // Fetch record whose timestampUpdated is more than currentStartTime
                         Filters.gte("timestampUpdated", currentStartTime),
                         // TODO this is added for trial testing. Will be removed later
-                        Filters.eq("europeanaCollectionName", "925_Ministerul_Culturii_UMP"));
+                        Filters.in("europeanaCollectionName", datasetToProcess));
         return threadSafeReader(reader);
     }
 

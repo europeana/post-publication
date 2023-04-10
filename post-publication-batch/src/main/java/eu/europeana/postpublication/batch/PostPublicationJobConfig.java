@@ -26,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 
 @Component
 @EnableBatchProcessing
@@ -86,6 +87,7 @@ public class PostPublicationJobConfig {
 
         // set the job metadata LastSuccessfulStartTime
         jobMetadata.setLastSuccessfulStartTime(startTime);
+        List<String> datasetsToProcess = postPublicationSettings.getDatasetsToProcess();
 
         if (logger.isInfoEnabled()) {
             logger.info(
@@ -96,7 +98,7 @@ public class PostPublicationJobConfig {
         return this.jobBuilderFactory
                 .get(POST_PUBLICATION_PIPELINE)
                 .start(initStats(stats, startTime))
-                .next(migrateRecordsStep(from))
+                .next(migrateRecordsStep(from, datasetsToProcess))
                 .next(finishStats(stats, startTime))
                 .next(updatePostPublicationJobMetadata(jobMetadata))
                 .build();
@@ -113,11 +115,11 @@ public class PostPublicationJobConfig {
      * @param start
      * @return
      */
-    private Step migrateRecordsStep(Instant start) {
+    private Step migrateRecordsStep(Instant start, List<String> datasetsToProcess) {
         return this.stepBuilderFactory
                 .get("migrateRecordsStep")
                 .<FullBean, FullBean>chunk(postPublicationSettings.getBatchChunkSize())
-                .reader(itemReaderConfig.createRecordReader(start))
+                .reader(itemReaderConfig.createRecordReader(start, datasetsToProcess))
                 .processor(recordProcessor)
                 .writer(recordWriter)
                 .listener((ItemProcessListener<? super FullBean, ? super FullBean>) postPublicationUpdateListener)

@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Configuration
 @PropertySource("classpath:post-publication.properties")
 @PropertySource(value = "classpath:post-publication.user.properties", ignoreResourceNotFound = true)
@@ -22,7 +25,6 @@ public class PostPublicationSettings implements InitializingBean {
 
     @Value("${mongo.read.database}")
     private String readDatabase;
-
 
     @Value("${mongo.writer.database}")
     private String writeDatabase;
@@ -51,12 +53,15 @@ public class PostPublicationSettings implements InitializingBean {
     @Value("${batch.retry:3}")
     private int retryLimit;
 
-
     @Value("${pp.initialDelaySeconds}")
     private int ppSyncInitialDelay;
 
     @Value("${pp.intervalSeconds}")
     private int ppSyncInterval;
+
+
+    @Value("${process.datasets}")
+    private String datasetsToProcess;
 
     public boolean IsFrameworkEnabled() {
         return isFrameworkEnabled;
@@ -116,6 +121,10 @@ public class PostPublicationSettings implements InitializingBean {
 
     public int getPpSyncInterval() {
         return ppSyncInterval;
+    }
+
+    public List<String> getDatasetsToProcess() {
+        return Arrays.asList(datasetsToProcess.split("\\s*,\\s*"));
     }
 
     private void validateRequiredSettings() {
