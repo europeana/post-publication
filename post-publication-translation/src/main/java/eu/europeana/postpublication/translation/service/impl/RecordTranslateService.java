@@ -134,6 +134,8 @@ public class RecordTranslateService extends BaseRecordService {
             Optional<String> langWithHigherPrecedance =  PRECENDANCE_LIST.stream().filter(languagesWithMostvalues :: contains).findFirst();
             if (langWithHigherPrecedance.isPresent()) {
                 return langWithHigherPrecedance.get();
+            } else {
+                LOG.warn("Language not found in the precedence list. Hence, will return the first language out of - {} ", languagesWithMostvalues);
             }
         }
         // will only have one value here, hence by default or any else case return the first language.
