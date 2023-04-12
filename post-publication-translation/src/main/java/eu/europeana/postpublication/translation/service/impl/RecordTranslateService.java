@@ -205,10 +205,10 @@ public class RecordTranslateService extends BaseRecordService {
      * @param bean          record
      * @return
      */
-    private void getValueFromLanguageMap(HashMap<String, List<String>> origFieldData, Field field, String sourceLang, FullBean bean, TranslationMap map1) {
+    private void getValueFromLanguageMap(HashMap<String, List<String>> origFieldData, Field field, String sourceLang, FullBean bean, TranslationMap map) {
         // Get the value only if there is NO "en" lanaguge tag already present for the field and there is value present for the sourceLang
         if (origFieldData != null && !origFieldData.isEmpty() && !origFieldData.containsKey(Language.ENGLISH) && origFieldData.containsKey(sourceLang)) {
-            map1.add(field.getName(), getValuesToTranslate(origFieldData, sourceLang, bean));
+            map.add(field.getName(), getValuesToTranslate(origFieldData, sourceLang, bean));
         }
     }
 
@@ -224,16 +224,13 @@ public class RecordTranslateService extends BaseRecordService {
     private List<String> getValuesToTranslate(HashMap<String, List<String>> origFieldData, String sourceLang, FullBean bean) {
         List<String> valuesToTranslate = new ArrayList<>();
         for (String value : origFieldData.get(sourceLang)) {
-            // if the value is a URI get the contextual entity pref label in source lang
+            // if the value is a URI get the contextual entity pref label in source lang.
+            // Also, ignore the other uri values whose entity doesn't exist
             if (EuropeanaUriUtils.isUri(value)) {
                 ContextualClass entity = entityExistsWithUrl(bean, value);
-                if (entity != null) {
-                    if (entity.getPrefLabel() != null && entity.getPrefLabel().containsKey(sourceLang)) {
-                        LOG.debug("Entity {} has preflabel in chosen language {} for translation  ", value, sourceLang);
-                        valuesToTranslate.addAll(entity.getPrefLabel().get(sourceLang));
-                    }
-                } else {
-                    valuesToTranslate.add(value); // add the uri whose contextual entity doesn't exist
+                if (entity != null && entity.getPrefLabel() != null && entity.getPrefLabel().containsKey(sourceLang)) {
+                    LOG.debug("Entity {} has preflabel in chosen language {} for translation  ", value, sourceLang);
+                    valuesToTranslate.addAll(entity.getPrefLabel().get(sourceLang));
                 }
             } else {
                 valuesToTranslate.add(value); // add non uri values

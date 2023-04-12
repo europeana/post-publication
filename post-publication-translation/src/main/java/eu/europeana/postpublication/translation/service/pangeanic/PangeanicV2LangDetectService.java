@@ -96,7 +96,7 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
                     if (hasLanguageAndScoreDetected(object)) {
                         double langScore = object.getDouble(PangeanicTranslationUtils.SOURCE_LANG_SCORE);
                         // if lang detected is lower than 0.5 score then don't accept the results
-                        if (langScore > THRESHOLD) {
+                        if (langScore >= THRESHOLD) {
                             result.add(object.getString(PangeanicTranslationUtils.SOURCE_DETECTED));
                         } else {
                             result.add(null);

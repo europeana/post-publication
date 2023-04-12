@@ -164,12 +164,13 @@ public class LanguageDetectionUtils {
             for (String value : nonLanguageTaggedValues) {
                 if (EuropeanaUriUtils.isUri(value)) {
                     ContextualClass entity = BaseRecordService.entityExistsWithUrl(bean, value);
+                    // For uri who have contextual entity we add the prefLabels only if non-language tagged values are present.
+                    // We ignore the prefLabels if language tagged values are present.
+                    // Also, ignore the other uri values whose entity doesn't exist
                     if (entity != null) {
                         // preflabels here will either have "def" values (only if there was no other language value present) OR will be empty
                         List<String> preflabels = getPrefLabelofEntity(entity, bean.getAbout());
                         resolvedNonLangTaggedValues.addAll(preflabels);
-                    } else {
-                        resolvedNonLangTaggedValues.add(value); // add the uri whose contextual entity doesn't exist
                     }
                 } else {
                     resolvedNonLangTaggedValues.add(value); // add other texts as it is
