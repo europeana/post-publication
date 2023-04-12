@@ -86,7 +86,7 @@ public class RecordTranslateService extends BaseRecordService {
 
         // if there is no language available for translation workflow, do nothing
         if(langCountMap.isEmpty()) {
-            LOG.error("NO most representative language present for record {}. " +
+            LOG.error("Most representative languages NOT present for record {}. " +
                     "Languages present are either zxx or def or not-supported by the translation engine", bean.getAbout());
             return bean;
         }
