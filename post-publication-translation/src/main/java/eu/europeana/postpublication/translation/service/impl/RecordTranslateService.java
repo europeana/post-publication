@@ -84,6 +84,12 @@ public class RecordTranslateService extends BaseRecordService {
             ReflectionUtils.doWithFields(proxy.getClass(), field -> getLanguageAndCount(proxy, field, langCountMap, targetLanguage), proxyFieldFilter);
         }
 
+        // if there is no language available for translation workflow, do nothing
+        if(langCountMap.isEmpty()) {
+            LOG.error("NO most representative language present for record {}. " +
+                    "Languages present are either zxx or def or not-supported by the translation engine", bean.getAbout());
+            return bean;
+        }
         String language = getMostRepresentativeLanguage(langCountMap);
         LOG.debug("Most representative language chosen for translations is  {}", language);
 
