@@ -96,7 +96,7 @@ public class TranslationMap extends LinkedHashMap<String, List<String>> {
         } catch (TranslationException e) {
             // Only if no translations were returned, Logging the failed scenarios
             for (Map.Entry<String, Integer> entry : textsPerField.entrySet()) {
-                LOG.info("rid: {} {} {} {} {} {} ", recordId, 0, 0, entry.getValue(), entry.getKey(), this.sourceLanguage);
+                LOG.info("rid:{} {} {} {} {} {} ", recordId, 0, 0, entry.getValue(), entry.getKey(), this.sourceLanguage);
             }
             throw new TranslationException(e.getMessage());
         }
@@ -122,7 +122,7 @@ public class TranslationMap extends LinkedHashMap<String, List<String>> {
             // remove duplicates per field
             ComparatorUtils.removeDuplicates(translationsForField);
 
-            LOG.info("rid: {} {} {} {} {} {} ", recordId, success, discarded, textPerFieldSize - (success+discarded), fieldName, this.sourceLanguage);
+            LOG.info("rid:{} {} {} {} {} {} ", recordId, success, discarded, textPerFieldSize - (success+discarded), fieldName, this.sourceLanguage);
             return translationsForField;
     }
 

@@ -111,9 +111,9 @@ public class RecordTranslateService extends BaseRecordService {
         }
 
         // get the translation in the target language
-        LOG.info("rid: {} start", bean.getAbout());
+        LOG.info("rid:{} start", bean.getAbout());
         TranslationMap translations = textToTranslate.translate(translationService, targetLanguage, bean.getAbout());
-        LOG.info("rid: {} end", bean.getAbout());
+        LOG.info("rid:{} end", bean.getAbout());
 
         // add all the translated data to Europeana proxy
         Proxy europeanaProxy = getEuropeanaProxy(bean.getProxies(), bean.getAbout());
