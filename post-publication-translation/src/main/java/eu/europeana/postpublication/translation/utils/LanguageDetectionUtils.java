@@ -57,18 +57,22 @@ public class LanguageDetectionUtils {
      * @param entity entity object
      * @return
      */
-    public static List<String> getPrefLabelofEntity(ContextualClass entity) {
+    public static List<String> getPrefLabelofEntity(ContextualClass entity, String recordId) {
         List<String> prefLabels = new ArrayList<>();
         if (entity != null) {
-            Map<String, List<String>> map = entity.getPrefLabel();
-            if (!map.isEmpty() && !map.keySet().isEmpty()) {
-                // if preflabel is present in other languages than "def" then do nothing
-                if (!map.isEmpty() && !map.keySet().isEmpty() && mapHasOtherLanguagesThanDef(map.keySet())) {
-                    LOG.debug("Entity {} already has language tagged values. PrefLabels NOT added...", entity.getAbout());
-                } else { // pick the def value
-                    LOG.debug("Entity {} has only non-language tagged values. Adding the prefLabels...", entity.getAbout());
-                    prefLabels.addAll(map.get(Language.DEF));
+            if (entity.getPrefLabel() != null) {
+                Map<String, List<String>> map = entity.getPrefLabel();
+                if (!map.isEmpty() && !map.keySet().isEmpty()) {
+                    // if preflabel is present in other languages than "def" then do nothing
+                    if (!map.isEmpty() && !map.keySet().isEmpty() && mapHasOtherLanguagesThanDef(map.keySet())) {
+                        LOG.debug("Entity {} already has language tagged values. PrefLabels NOT added...", entity.getAbout());
+                    } else { // pick the def value
+                        LOG.debug("Entity {} has only non-language tagged values. Adding the prefLabels...", entity.getAbout());
+                        prefLabels.addAll(map.get(Language.DEF));
+                    }
                 }
+            } else {
+                LOG.error("prefLabels NOT available for entity {} in record {} .", entity.getAbout(), recordId);
             }
         }
         return prefLabels;
@@ -162,7 +166,7 @@ public class LanguageDetectionUtils {
                     ContextualClass entity = BaseRecordService.entityExistsWithUrl(bean, value);
                     if (entity != null) {
                         // preflabels here will either have "def" values (only if there was no other language value present) OR will be empty
-                        List<String> preflabels = getPrefLabelofEntity(entity);
+                        List<String> preflabels = getPrefLabelofEntity(entity, bean.getAbout());
                         resolvedNonLangTaggedValues.addAll(preflabels);
                     } else {
                         resolvedNonLangTaggedValues.add(value); // add the uri whose contextual entity doesn't exist
