@@ -9,7 +9,6 @@ import org.springframework.batch.item.support.SynchronizedItemStreamReader;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -31,8 +30,7 @@ public class ItemReaderConfig {
                         // Fetch record whose timestampUpdated is more than currentStartTime
                         Filters.gte("timestampUpdated", currentStartTime),
                         // TODO this is added for trial testing. Will be removed later
-                        Filters.in("europeanaCollectionName", datasetToProcess),
-                        Filters.in("about", Arrays.asList("/298/item_3181765", "/298/item_3181763", "/298/item_2439914")));
+                        Filters.in("europeanaCollectionName", datasetToProcess));
         return threadSafeReader(reader);
     }
 
