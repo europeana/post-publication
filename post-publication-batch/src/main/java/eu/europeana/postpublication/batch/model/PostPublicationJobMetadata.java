@@ -28,12 +28,4 @@ public class PostPublicationJobMetadata {
     public void setLastSuccessfulStartTime(Instant lastSuccessfulStartTime) {
         this.lastSuccessfulStartTime = lastSuccessfulStartTime;
     }
-
-    @Override
-    public String toString() {
-        return "PostPublicationJobMetadata{"
-                + "lastSuccessfulStartTime="
-                + lastSuccessfulStartTime
-                + '}';
-    }
 }

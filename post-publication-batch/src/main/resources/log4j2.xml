@@ -19,13 +19,9 @@
         <Logger name="eu.europeana.postpublication" level="DEBUG"/>
         <Logger name="eu.europeana.postpublication.translation" level="INFO"/>
 
-
-        <!--        &lt;!&ndash;Suppress unhelpful Spring Batch warnings.-->
-<!--        See https://stackoverflow.com/questions/23780587/spring-batch-reader-in-multi-threader-job &ndash;&gt;-->
-<!--        <Logger name="org.springframework.batch.core.step" level="ERROR"/>-->
-
-<!--        &lt;!&ndash; Suppress "Invalid cookie header" warnings during Wikidata dereferencing         &ndash;&gt;-->
-<!--        <Logger name="org.apache.http.client.protocol.ResponseProcessCookies" level="ERROR"/>-->
+        <!--Suppress unhelpful Spring Batch warnings.
+        See https://stackoverflow.com/questions/23780587/spring-batch-reader-in-multi-threader-job -->
+        <Logger name="org.springframework.batch.core.step" level="ERROR"/>
 
     </Loggers>
 </Configuration>
