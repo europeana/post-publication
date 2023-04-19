@@ -104,14 +104,11 @@ public class RecordLangDetectionService extends BaseRecordService {
             // 3. collect all the values in one list for single lang-detection request per proxy
             LanguageDetectionUtils.getTextsForDetectionRequest(textsForDetection, textsPerField, langValueFieldMapForDetection);
 
-            LOG.info("rid:{} Gathering_detection_values-{}ms", bean.getAbout(), (System.currentTimeMillis() - start));
+            LOG.debug("rid:{} Gathering_detection_values-{}ms", bean.getAbout(), (System.currentTimeMillis() - start));
 
-            long startd = System.currentTimeMillis();
             // 4. send lang-detect request
             List<String> detectedLanguages = detectionService.detectLang(textsForDetection, langHint);
             LOG.debug("Detected languages - {} ", detectedLanguages);
-
-            LOG.info("rid:{} Detection_engine-{}ms", bean.getAbout(), (System.currentTimeMillis() - startd));
 
             //5. assign language attributes to the values. This map may contain "def" tag values.
             // As for the unidentified languages or unacceptable threshold values the service returns null
@@ -121,7 +118,7 @@ public class RecordLangDetectionService extends BaseRecordService {
             // 6. add all the new language tagged values to europeana proxy
             Proxy europeanProxy = getEuropeanaProxy(bean.getProxies(), bean.getAbout());
             updateProxy(europeanProxy, correctLangValueMap);
-            LOG.info("rid:{} Language_detection-{}ms", bean.getAbout(), (System.currentTimeMillis() - start));
+            LOG.debug("rid:{} Language_detection-{}ms", bean.getAbout(), (System.currentTimeMillis() - start));
         }
         return bean;
     }
