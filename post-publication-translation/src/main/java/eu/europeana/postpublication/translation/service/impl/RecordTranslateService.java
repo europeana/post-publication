@@ -76,10 +76,10 @@ public class RecordTranslateService extends BaseRecordService {
      *
      */
     public FullBean translateProxyFields(FullBean bean, String targetLanguage) throws TranslationException, InvalidParamValueException {
+        LOG.info("rid:{} started",bean.getAbout());
         long start = System.currentTimeMillis();
         List<Proxy> proxies = new ArrayList<>(bean.getProxies()); // make sure we clone first so we can edit the list to our needs.
 
-//        LOG.info("rid:{} started",bean.getAbout());
         // 1. get the most representative language from all proxies
         Map<String, Integer> langCountMap = new HashMap<>();
         for (Proxy proxy : proxies) {
@@ -103,9 +103,20 @@ public class RecordTranslateService extends BaseRecordService {
 
         // 3. Gather all language qualified values matching the chosen language per whitelisted property from all Proxies including the Europeana Proxy
         TranslationMap textToTranslate = new TranslationMap(language);
+
+        // To store the fields if they have "en" values across any proxy
+        Set<String> otherProxyFieldsWithEnglishValues = new HashSet<>();
+
         for (Proxy proxy : proxies) {
-            ReflectionUtils.doWithFields(proxy.getClass(), field -> getProxyValuesToTranslateForField(proxy, field, language, bean, textToTranslate), proxyFieldFilter);
+            ReflectionUtils.doWithFields(proxy.getClass(), field -> getProxyValuesToTranslateForField(proxy, field, language, bean, textToTranslate, otherProxyFieldsWithEnglishValues), proxyFieldFilter);
         }
+
+        // remove the fields whose "en" values are present in other proxies
+        otherProxyFieldsWithEnglishValues.stream().forEach(field -> {
+            if (textToTranslate.containsKey(field)) {
+                textToTranslate.remove(field);
+            }
+        });
 
         LOG.debug("rid:{} Gathering_values_for_translation-{}ms", bean.getAbout(), (System.currentTimeMillis() - start));
 
@@ -197,9 +208,10 @@ public class RecordTranslateService extends BaseRecordService {
      * @param bean
      * @return
      */
-    private void getProxyValuesToTranslateForField(Proxy proxy, Field field, String sourceLang, FullBean bean, TranslationMap map) {
+    private void getProxyValuesToTranslateForField(Proxy proxy, Field field, String sourceLang, FullBean bean, TranslationMap map, Set<String> otherProxyFieldsWithEnglishValues) {
         HashMap<String, List<String>> origFieldData = (HashMap<String, List<String>>) getValueOfTheField(proxy, false).apply(field.getName());
-        getValueFromLanguageMap(SerializationUtils.clone(origFieldData), field, sourceLang, bean, map);
+        getValueFromLanguageMap(SerializationUtils.clone(origFieldData), field, sourceLang, bean, map, otherProxyFieldsWithEnglishValues);
+
     }
 
     /**
@@ -213,11 +225,22 @@ public class RecordTranslateService extends BaseRecordService {
      * @param bean          record
      * @return
      */
-    private void getValueFromLanguageMap(HashMap<String, List<String>> origFieldData, Field field, String sourceLang, FullBean bean, TranslationMap map) {
-        // Get the value only if there is NO "en" lanaguge tag already present for the field and there is value present for the sourceLang
-        if (origFieldData != null && !origFieldData.isEmpty() && !origFieldData.containsKey(Language.ENGLISH) && origFieldData.containsKey(sourceLang)) {
+    private void getValueFromLanguageMap(HashMap<String, List<String>> origFieldData, Field field, String sourceLang, FullBean bean, TranslationMap map,
+                                         Set<String> otherProxyFieldsWithEnglishValues) {
+
+        // Get the value only if there is NO "en" language tag already present for the field in any proxy and there is value present for the sourceLang
+        if (origFieldData != null && !origFieldData.isEmpty()  && !origFieldData.containsKey(Language.ENGLISH) && origFieldData.containsKey(sourceLang)) {
             map.add(field.getName(), getValuesToTranslate(origFieldData, sourceLang, bean));
         }
+        // if contains english add it in the list
+        if(origFieldData != null && !origFieldData.isEmpty()  && origFieldData.containsKey(Language.ENGLISH)) {
+            otherProxyFieldsWithEnglishValues.add(field.getName());
+        }
+
+//        if(!otherProxyHasEnglishTag.get(field.getName())) {
+//            if (origFieldData != null && !origFieldData.isEmpty() && !origFieldData.containsKey(Language.ENGLISH) && origFieldData.containsKey(sourceLang)) {
+//            }
+//        }
     }
 
     /**
