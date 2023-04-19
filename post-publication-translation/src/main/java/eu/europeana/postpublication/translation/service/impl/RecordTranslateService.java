@@ -79,7 +79,7 @@ public class RecordTranslateService extends BaseRecordService {
         long start = System.currentTimeMillis();
         List<Proxy> proxies = new ArrayList<>(bean.getProxies()); // make sure we clone first so we can edit the list to our needs.
 
-        LOG.info("rid:{} started",bean.getAbout());
+//        LOG.info("rid:{} started",bean.getAbout());
         // 1. get the most representative language from all proxies
         Map<String, Integer> langCountMap = new HashMap<>();
         for (Proxy proxy : proxies) {
