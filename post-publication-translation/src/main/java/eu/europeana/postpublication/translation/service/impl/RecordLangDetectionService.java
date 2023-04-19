@@ -70,6 +70,7 @@ public class RecordLangDetectionService extends BaseRecordService {
      * @throws EuropeanaApiException
      */
     public FullBean detectLanguageForProxy(FullBean bean) throws EuropeanaApiException {
+        long start = System.currentTimeMillis();
         List<Proxy> proxies = new ArrayList<>(bean.getProxies()); // make sure we clone first so we can edit the list to our needs.
 
         // Data/santity check
@@ -103,6 +104,8 @@ public class RecordLangDetectionService extends BaseRecordService {
             // 3. collect all the values in one list for single lang-detection request per proxy
             LanguageDetectionUtils.getTextsForDetectionRequest(textsForDetection, textsPerField, langValueFieldMapForDetection);
 
+            LOG.info("Gathering values for language detection for record = {} took - {} ms", bean.getAbout(), (System.currentTimeMillis() - start));
+
             // 4. send lang-detect request
             List<String> detectedLanguages = detectionService.detectLang(textsForDetection, langHint);
             LOG.debug("Detected languages - {} ", detectedLanguages);
@@ -115,6 +118,7 @@ public class RecordLangDetectionService extends BaseRecordService {
             // 6. add all the new language tagged values to europeana proxy
             Proxy europeanProxy = getEuropeanaProxy(bean.getProxies(), bean.getAbout());
             updateProxy(europeanProxy, correctLangValueMap);
+            LOG.info("Language detection for record = {} took - {} ms", bean.getAbout(), (System.currentTimeMillis() - start));
         }
         return bean;
     }

@@ -76,6 +76,7 @@ public class RecordTranslateService extends BaseRecordService {
      *
      */
     public FullBean translateProxyFields(FullBean bean, String targetLanguage) throws TranslationException, InvalidParamValueException {
+        long start = System.currentTimeMillis();
         List<Proxy> proxies = new ArrayList<>(bean.getProxies()); // make sure we clone first so we can edit the list to our needs.
 
         LOG.info("rid:{} started",bean.getAbout());
@@ -105,6 +106,9 @@ public class RecordTranslateService extends BaseRecordService {
         for (Proxy proxy : proxies) {
             ReflectionUtils.doWithFields(proxy.getClass(), field -> getProxyValuesToTranslateForField(proxy, field, language, bean, textToTranslate), proxyFieldFilter);
         }
+
+        LOG.info("Gathering values for translation for record = {} took - {} ms", bean.getAbout(), (System.currentTimeMillis() - start));
+
         // if no translation gathered return
         if (textToTranslate.isEmpty()) {
             LOG.debug("No values gathered for translations. Stopping the translation workflow for record {}", bean.getAbout());
@@ -122,6 +126,7 @@ public class RecordTranslateService extends BaseRecordService {
         Proxy europeanaProxy = getEuropeanaProxy(bean.getProxies(), bean.getAbout());
         updateProxy(europeanaProxy, translations);
 
+        LOG.info("Translating record = {} took - {} ms", bean.getAbout(), (System.currentTimeMillis() - start));
         return bean;
     }
 
