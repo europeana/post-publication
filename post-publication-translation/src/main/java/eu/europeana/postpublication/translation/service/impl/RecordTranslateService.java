@@ -107,7 +107,7 @@ public class RecordTranslateService extends BaseRecordService {
             ReflectionUtils.doWithFields(proxy.getClass(), field -> getProxyValuesToTranslateForField(proxy, field, language, bean, textToTranslate), proxyFieldFilter);
         }
 
-        LOG.info("Gathering values for translation for record = {} took - {} ms", bean.getAbout(), (System.currentTimeMillis() - start));
+        LOG.info("rid:{} Gathering_values_for_translation-{}ms", bean.getAbout(), (System.currentTimeMillis() - start));
 
         // if no translation gathered return
         if (textToTranslate.isEmpty()) {
@@ -115,18 +115,20 @@ public class RecordTranslateService extends BaseRecordService {
             return bean;
         }
 
+        long startd = System.currentTimeMillis();
         // get the translation in the target language
         LOG.info("rid:{} attempted", bean.getAbout());
         TranslationMap translations = textToTranslate.translate(translationService, targetLanguage, bean.getAbout());
         if (!translations.isEmpty()) {
             LOG.info("rid:{} translated", bean.getAbout());
         }
+        LOG.info("rid:{} Translation_engine-{}ms", bean.getAbout(), (System.currentTimeMillis() - startd));
 
         // add all the translated data to Europeana proxy
         Proxy europeanaProxy = getEuropeanaProxy(bean.getProxies(), bean.getAbout());
         updateProxy(europeanaProxy, translations);
 
-        LOG.info("Translating record = {} took - {} ms", bean.getAbout(), (System.currentTimeMillis() - start));
+        LOG.info("rid:{} Translating_record-{}ms", bean.getAbout(), (System.currentTimeMillis() - start));
         return bean;
     }
 
