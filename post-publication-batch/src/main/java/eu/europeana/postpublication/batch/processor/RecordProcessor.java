@@ -32,12 +32,12 @@ public class RecordProcessor implements ItemProcessor<FullBean, FullBean> {
 
     @Override
     public FullBean process(@NotNull FullBean bean) throws Exception {
-        LOG.info("rid:{} started",bean.getAbout());
-//        bean = langDetectionService.detectLanguageForProxy(bean);
-//        bean = translateFilterService.translateProxyFields(bean, Language.ENGLISH);
+        //LOG.info("rid:{} started",bean.getAbout());
+        bean = langDetectionService.detectLanguageForProxy(bean);
+        bean = translateFilterService.translateProxyFields(bean, Language.ENGLISH);
 
-        // update the timestamp for the bean after processing
-       // bean.setTimestampUpdated(new Date());
+        //update the timestamp for the bean after processing
+        bean.setTimestampUpdated(new Date());
 
         return bean;
     }
