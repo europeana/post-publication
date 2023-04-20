@@ -9,7 +9,10 @@ import eu.europeana.indexing.mongo.FullBeanUpdater;
 import eu.europeana.indexing.utils.TriConsumer;
 import eu.europeana.metis.mongo.dao.RecordDao;
 import eu.europeana.postpublication.exception.MongoConnnectionException;
+import eu.europeana.postpublication.translation.service.impl.RecordTranslateService;
 import eu.europeana.postpublication.utils.AppConstants;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.ArrayList;
@@ -21,6 +24,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class FullBeanPublisher extends FullBeanUpdater {
+
+    private static final Logger LOG = LogManager.getLogger(FullBeanPublisher.class);
 
     @Qualifier(AppConstants.RECORD_DAO)
     private final RecordDao edmMongoClient;
@@ -45,6 +50,8 @@ public class FullBeanPublisher extends FullBeanUpdater {
             List<String> recordUpdates = new ArrayList<>();
             try {
                 for (FullBean fullBean : recordList) {
+                    LOG.info("rid:{} started",fullBean.getAbout());
+
                     FullBeanImpl savedFullBean = new FullBeanUpdater(fullBeanPreprocessor).update((FullBeanImpl) fullBean, null,
                             fullBean.getTimestampCreated(), edmMongoClient);
                     recordUpdates.add(savedFullBean.getAbout()); // only add the processed ones

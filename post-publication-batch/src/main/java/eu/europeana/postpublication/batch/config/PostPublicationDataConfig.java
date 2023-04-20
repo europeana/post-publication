@@ -1,5 +1,6 @@
 package eu.europeana.postpublication.batch.config;
 
+import com.mongodb.MongoClient;
 import com.mongodb.client.MongoClients;
 import dev.morphia.Datastore;
 import eu.europeana.batch.entity.JobExecutionEntity;
