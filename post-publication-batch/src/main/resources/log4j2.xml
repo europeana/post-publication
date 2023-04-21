@@ -2,7 +2,9 @@
 <Configuration status="WARN">
 
     <Properties>
-        <Property name="LOG_DIR">/post-publication/logs</Property>
+<!--        <Property name="LOG_DIR">/Users/srishti/Docs_2020/post-publication/logs</Property>-->
+          <!--   For DR-->
+        <Property name="LOG_DIR">logs</Property>
     </Properties>
 
     <Appenders>
