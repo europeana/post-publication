@@ -29,7 +29,7 @@ nbdist/
 # Local user-specific configuration
 **/post-publication.user.properties
 
-/logs
+
 
 
 
