@@ -120,7 +120,7 @@ public class PostPublicationJobConfig {
                 .get("migrateRecordsStep")
                 .<FullBean, FullBean>chunk(postPublicationSettings.getBatchChunkSize())
                 .reader(itemReaderConfig.createRecordReader(start, datasetsToProcess))
-                .processor(recordProcessor)
+                //.processor(recordProcessor)
                 .writer(recordWriter)
                 .listener((ItemProcessListener<? super FullBean, ? super FullBean>) postPublicationUpdateListener)
                 .faultTolerant()
