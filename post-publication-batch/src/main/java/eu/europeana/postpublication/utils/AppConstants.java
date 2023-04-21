@@ -20,4 +20,9 @@ public class AppConstants {
     public static final String PP_SYNC_TASK_EXECUTOR = "postPublicationTaskExecutor";
     public static final String PP_SYNC_TASK_SCHEDULAR = "postPublicationSyncTaskScheduler";
 
+    // MONGO constants
+    public static final String ABOUT = "about";
+    public static final String TIMESTAMP_UPDATED = "timestampUpdated";
+
+
 }

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -124,7 +125,10 @@ public class PostPublicationSettings implements InitializingBean {
     }
 
     public List<String> getDatasetsToProcess() {
-        return Arrays.asList(datasetsToProcess.split("\\s*,\\s*"));
+        if(StringUtils.isNotEmpty(datasetsToProcess)) {
+            return Arrays.asList(datasetsToProcess.split("\\s*,\\s*"));
+        }
+        return new ArrayList<>();
     }
 
     private void validateRequiredSettings() {
