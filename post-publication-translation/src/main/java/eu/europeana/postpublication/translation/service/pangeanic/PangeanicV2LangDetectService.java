@@ -6,6 +6,7 @@ import eu.europeana.postpublication.translation.utils.PangeanicTranslationUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.config.SocketConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -34,7 +35,7 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
     @Value("${translation.pangeanic.endpoint.detect:}")
     protected String detectEndpoint;
 
-    protected CloseableHttpClient translateClient;
+    protected CloseableHttpClient detectClient;
 
     /**
      * Creates a new client that can send translation requests to Google Cloud Translate. Note that the client needs
@@ -47,7 +48,8 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
         PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
         cm.setMaxTotal(PangeanicTranslationUtils.MAX_CONNECTIONS);
         cm.setDefaultMaxPerRoute(PangeanicTranslationUtils.MAX_CONNECTIONS_PER_ROUTE);
-        translateClient = HttpClients.custom().setConnectionManager(cm).build();
+        SocketConfig socketConfig = SocketConfig.custom().setSoKeepAlive(true).setSoTimeout(3600000).build(); //We need to set socket keep alive
+        detectClient = HttpClients.custom().setDefaultSocketConfig(socketConfig).setConnectionManager(cm).build();
         LOG.info("Pangeanic Language Detection service is initialized with detect language Endpoint - {}", detectEndpoint);
     }
 
@@ -78,7 +80,7 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
      * @throws TranslationException
      */
     private List<String> sendDetectRequestAndParse(HttpPost post) throws IOException, JSONException, TranslationException {
-        try (CloseableHttpResponse response = translateClient.execute(post)) {
+        try (CloseableHttpResponse response = detectClient.execute(post)) {
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 throw new IOException("Error from Pangeanic Translation API: " +
                         response.getStatusLine().getStatusCode() + " - " + response.getStatusLine().getReasonPhrase());
@@ -119,9 +121,9 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
 
     @Override
     public void close() {
-        if (translateClient != null) {
+        if (detectClient != null) {
             try {
-                this.translateClient.close();
+                this.detectClient.close();
             } catch (IOException e) {
                 LOG.error("Error closing connection to Pangeanic Translation API", e);
             }
