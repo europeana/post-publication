@@ -95,7 +95,7 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
                 JSONObject obj = new JSONObject(json);
 
                 // if json doesn't have detected lanaguge throw a error
-                if (obj.has(PangeanicTranslationUtils.DETECTED_LANGUAGE)) {
+                if (!obj.has(PangeanicTranslationUtils.DETECTED_LANGUAGE)) {
                     throw new TranslationException("Language detect response doesn't have detected_langs tags");
                 }
 
