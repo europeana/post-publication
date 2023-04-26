@@ -1,14 +1,20 @@
 package eu.europeana.postpublication.batch.reader;
 
+import dev.morphia.query.experimental.filters.Filter;
 import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.filters.RegexFilter;
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
 import eu.europeana.postpublication.batch.config.PostPublicationSettings;
 import eu.europeana.postpublication.service.BatchRecordService;
+import static eu.europeana.postpublication.utils.AppConstants.ABOUT;
+import static eu.europeana.postpublication.utils.AppConstants.TIMESTAMP_UPDATED;
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.batch.item.support.SynchronizedItemStreamReader;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Configuration
 public class ItemReaderConfig {
@@ -21,16 +27,36 @@ public class ItemReaderConfig {
         this.postPublicationSettings = postPublicationSettings;
     }
 
-    public SynchronizedItemStreamReader<FullBean> createRecordReader(Instant currentStartTime) {
+    /**
+     * Creates a database reader with query filters
+     * {$match : {timestampUpdated :{$gte : "date"}}}
+     * {$or : [{"about" : {$regex : '^/D1/'}},{"about" : {$regex : '^/D2/'}} , {"about" : {$regex : '^/D3/'}}]}
+     *
+     * @param currentStartTime
+     * @param datasetToProcess
+     * @return
+     */
+    public SynchronizedItemStreamReader<FullBean> createRecordReader(Instant currentStartTime, List<String> datasetToProcess) {
+        List<Filter> filters = new ArrayList<>();
 
-        RecordDatabaseReader reader =
-                new RecordDatabaseReader(
-                        batchRecordService, postPublicationSettings.getBatchChunkSize(),
-                        // Fetch record whose timestampUpdated is more than currentStartTime
-                        Filters.gte("timestampUpdated", currentStartTime),
-                        // TODO this is added for trial testing. Will be removed later
-                        Filters.eq("europeanaCollectionName", "925_Ministerul_Culturii_UMP"));
-        return threadSafeReader(reader);
+        // TODO commnted out for now for the First DB migration with translations
+        // Fetch record whose timestampUpdated is more than currentStartTime
+//        if(currentStartTime != null) {
+//            filters.add(Filters.gte(TIMESTAMP_UPDATED, currentStartTime));
+//        }
+
+        // add the regexFilter on about fields if datasets are present
+        if(!datasetToProcess.isEmpty()) {
+            List<RegexFilter> regexFilters = new ArrayList<>();
+            datasetToProcess.stream().forEach(dataset -> regexFilters.add(Filters.regex(ABOUT).pattern("^/" + dataset + "/")));
+            filters.add(Filters.or(regexFilters.toArray(new Filter[0])));
+        }
+            RecordDatabaseReader reader =
+                    new RecordDatabaseReader(
+                            batchRecordService, postPublicationSettings.getBatchChunkSize(),
+                            filters.toArray(new Filter[0]));
+            return threadSafeReader(reader);
+
     }
 
     /** Makes ItemReader thread-safe */

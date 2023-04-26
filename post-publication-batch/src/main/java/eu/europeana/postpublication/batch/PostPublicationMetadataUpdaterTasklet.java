@@ -25,7 +25,7 @@ public class PostPublicationMetadataUpdaterTasklet implements Tasklet {
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext)
       throws Exception {
     repository.save(metadata);
-    logger.info("Saved post publication metadata {}", metadata);
+    logger.info("Saved post publication metadata {}", metadata.getLastSuccessfulStartTime());
 
     return RepeatStatus.FINISHED;
   }

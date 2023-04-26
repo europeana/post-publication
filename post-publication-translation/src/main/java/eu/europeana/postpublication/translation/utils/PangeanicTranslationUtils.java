@@ -20,9 +20,6 @@ public class PangeanicTranslationUtils {
 
     private static final Logger LOG = LogManager.getLogger(PangeanicTranslationUtils.class);
 
-    public static final Set<String> SUPPORTED_LANGUAGES = Set.of("sk", "hr", "pl", "ro", "it", "sv", "bg", "fr", "es", "cs", "de", "lv",
-            "el", "fi", "nl", "hu", "da", "sl", "et", "pt", "lt", "ga");
-
     public static final int MAX_CONNECTIONS = 100;
     public static final int MAX_CONNECTIONS_PER_ROUTE = 100;
     public static final int TOKEN_MIN_AGE = 30_000; //ms
@@ -39,9 +36,11 @@ public class PangeanicTranslationUtils {
     public static final String TRANSLATIONS = "translations";
     public static final String TRANSLATE_SOURCE = "src";
     public static final String TRANSLATE_TARGET = "tgt";
+    public static final String TRANSLATE_SCORE = "score";
 
     //detect endpoint response fields
     public static final String SOURCE_DETECTED = "src_detected";
+    public static final String SOURCE_LANG_SCORE = "src_lang_score";
     public static final String DETECTED_LANGUAGE = "detected_langs";
 
     private PangeanicTranslationUtils() {

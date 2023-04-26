@@ -1,5 +1,6 @@
 package eu.europeana.postpublication.batch.config;
 
+import com.mongodb.MongoClient;
 import com.mongodb.client.MongoClients;
 import dev.morphia.Datastore;
 import eu.europeana.batch.entity.JobExecutionEntity;
@@ -48,7 +49,7 @@ public class PostPublicationDataConfig {
     @Bean(name = AppConstants.BEAN_BATCH_DATA_STORE)
     public Datastore batchDataStore() {
         logger.info("Configuring Batch (reader) database: {}", settings.getReadDatabase());
-        RecordDao recordDao = new RecordDao(MongoClients.create(settings.getMongoReadConnectionUrl()), settings.getReadDatabase(), true);
+        RecordDao recordDao = new RecordDao(MongoClients.create(settings.getMongoReadConnectionUrl()), settings.getReadDatabase(), false);
         recordDao.getDatastore().getMapper().mapPackage(JobExecutionEntity.class.getPackageName());
         return recordDao.getDatastore();
     }

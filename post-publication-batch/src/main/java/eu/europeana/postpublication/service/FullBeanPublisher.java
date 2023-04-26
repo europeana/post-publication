@@ -9,7 +9,7 @@ import eu.europeana.indexing.mongo.FullBeanUpdater;
 import eu.europeana.indexing.utils.TriConsumer;
 import eu.europeana.metis.mongo.dao.RecordDao;
 import eu.europeana.postpublication.exception.MongoConnnectionException;
-import eu.europeana.postpublication.utils.AppConstants;
+import eu.europeana.postpublication.utils.AppConstants;;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.ArrayList;

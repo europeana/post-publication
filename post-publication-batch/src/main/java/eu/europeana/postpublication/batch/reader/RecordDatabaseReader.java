@@ -35,20 +35,18 @@ public class RecordDatabaseReader extends BaseDatabaseReader<FullBean> {
         // number of items to skip when reading. pageSize is incremented in parent class every time
         // this method is invoked
         int start = page * pageSize;
-        List<? extends FullBean> result =
-                recordService.findRecordWithFilter(start, pageSize, queryFilters);
 
+        List<? extends FullBean> result = recordService.getNextPageOfRecords( start, pageSize, queryFilters);
         if (result == null || result.isEmpty()) {
             return null;
         }
 
         if (logger.isDebugEnabled()) {
             logger.debug(
-                    "Retrieved {} Records from database. skip={}, limit={}, recordIds={}",
+                    "Retrieved {} Records from database. skip={}, limit={}",
                     result.size(),
                     start,
-                    pageSize,
-                    Arrays.toString(BatchUtils.getRecordIds(result)));
+                    pageSize);
         }
 
         return (Iterator<FullBean>) result.iterator();

@@ -11,10 +11,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class LanguageDetectionUtils {
 
     private static final Logger LOG = LogManager.getLogger(LanguageDetectionUtils.class);
+
+    private static final String PATTERN = "\\p{L}|[0-9]";
+    private static final Pattern unicodeNumberPattern = Pattern.compile(PATTERN);
 
     private LanguageDetectionUtils() {
 
@@ -57,18 +62,22 @@ public class LanguageDetectionUtils {
      * @param entity entity object
      * @return
      */
-    public static List<String> getPrefLabelofEntity(ContextualClass entity) {
+    public static List<String> getPrefLabelofEntity(ContextualClass entity, String recordId) {
         List<String> prefLabels = new ArrayList<>();
         if (entity != null) {
-            Map<String, List<String>> map = entity.getPrefLabel();
-            if (!map.isEmpty() && !map.keySet().isEmpty()) {
-                // if preflabel is present in other languages than "def" then do nothing
-                if (!map.isEmpty() && !map.keySet().isEmpty() && mapHasOtherLanguagesThanDef(map.keySet())) {
-                    LOG.debug("Entity {} already has language tagged values. PrefLabels NOT added...", entity.getAbout());
-                } else { // pick the def value
-                    LOG.debug("Entity {} has only non-language tagged values. Adding the prefLabels...", entity.getAbout());
-                    prefLabels.addAll(map.get(Language.DEF));
+            if (entity.getPrefLabel() != null) {
+                Map<String, List<String>> map = entity.getPrefLabel();
+                if (!map.isEmpty() && !map.keySet().isEmpty()) {
+                    // if preflabel is present in other languages than "def" then do nothing
+                    if (!map.isEmpty() && !map.keySet().isEmpty() && mapHasOtherLanguagesThanDef(map.keySet())) {
+                        LOG.debug("Entity {} already has language tagged values. PrefLabels NOT added...", entity.getAbout());
+                    } else { // pick the def value
+                        LOG.debug("Entity {} has only non-language tagged values. Adding the prefLabels...", entity.getAbout());
+                        prefLabels.addAll(map.get(Language.DEF));
+                    }
                 }
+            } else {
+                LOG.error("prefLabels NOT available for entity {} in record {} .", entity.getAbout(), recordId);
             }
         }
         return prefLabels;
@@ -116,7 +125,7 @@ public class LanguageDetectionUtils {
                 } else {
                     List<String> values = new ArrayList<>();
                     values.add(textsForDetection.get(counter));
-                    newValueMap.put(detectedLanguages.get(counter), values);
+                    newValueMap.put(newLang, values);
                 }
                 counter++;
             }
@@ -138,7 +147,7 @@ public class LanguageDetectionUtils {
         List<String> defValues = new ArrayList<>();
         if (!map.isEmpty() && map.containsKey(Language.DEF)) {
             List<String> values = map.get(Language.DEF);
-            // check if there is if there is any other language present in the map and
+            // check if there is any other language present in the map and
             // if yes, then check if lang-tagged values already have the def tagged values present
             if (LanguageDetectionUtils.mapHasOtherLanguagesThanDef(map.keySet())) {
                 defValues.addAll(LanguageDetectionUtils.removeLangTaggedValuesFromDef(map));
@@ -148,8 +157,12 @@ public class LanguageDetectionUtils {
         }
         // resolve the uri's and if contextual entity present get the preflabel
         List<String> resolvedNonLangTaggedValues = checkForUrisAndGetPrefLabel(bean, defValues);
-        if (!resolvedNonLangTaggedValues.isEmpty()) {
-            return new LanguageValueFieldMap(fieldName, Language.DEF, resolvedNonLangTaggedValues);
+
+        //  Check if the value contains at least 1 unicode letter or number (otherwise ignore)
+        List<String> cleanDefValues = resolvedNonLangTaggedValues.stream().filter(value -> unicodeNumberPattern.matcher(value).find()).collect(Collectors.toList());
+
+        if (!cleanDefValues.isEmpty()) {
+            return new LanguageValueFieldMap(fieldName, Language.DEF, cleanDefValues);
         }
         return null;
     }
@@ -160,12 +173,13 @@ public class LanguageDetectionUtils {
             for (String value : nonLanguageTaggedValues) {
                 if (EuropeanaUriUtils.isUri(value)) {
                     ContextualClass entity = BaseRecordService.entityExistsWithUrl(bean, value);
+                    // For uri who have contextual entity we add the prefLabels only if non-language tagged values are present.
+                    // We ignore the prefLabels if language tagged values are present.
+                    // Also, ignore the other uri values whose entity doesn't exist
                     if (entity != null) {
                         // preflabels here will either have "def" values (only if there was no other language value present) OR will be empty
-                        List<String> preflabels = getPrefLabelofEntity(entity);
+                        List<String> preflabels = getPrefLabelofEntity(entity, bean.getAbout());
                         resolvedNonLangTaggedValues.addAll(preflabels);
-                    } else {
-                        resolvedNonLangTaggedValues.add(value); // add the uri whose contextual entity doesn't exist
                     }
                 } else {
                     resolvedNonLangTaggedValues.add(value); // add other texts as it is
