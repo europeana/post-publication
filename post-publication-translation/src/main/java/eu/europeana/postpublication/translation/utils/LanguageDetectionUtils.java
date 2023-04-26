@@ -11,10 +11,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class LanguageDetectionUtils {
 
     private static final Logger LOG = LogManager.getLogger(LanguageDetectionUtils.class);
+
+    private static final String PATTERN = "\\p{L}|[0-9]";
+    private static final Pattern unicodeNumberPattern = Pattern.compile(PATTERN);
 
     private LanguageDetectionUtils() {
 
@@ -142,7 +147,7 @@ public class LanguageDetectionUtils {
         List<String> defValues = new ArrayList<>();
         if (!map.isEmpty() && map.containsKey(Language.DEF)) {
             List<String> values = map.get(Language.DEF);
-            // check if there is if there is any other language present in the map and
+            // check if there is any other language present in the map and
             // if yes, then check if lang-tagged values already have the def tagged values present
             if (LanguageDetectionUtils.mapHasOtherLanguagesThanDef(map.keySet())) {
                 defValues.addAll(LanguageDetectionUtils.removeLangTaggedValuesFromDef(map));
@@ -152,8 +157,12 @@ public class LanguageDetectionUtils {
         }
         // resolve the uri's and if contextual entity present get the preflabel
         List<String> resolvedNonLangTaggedValues = checkForUrisAndGetPrefLabel(bean, defValues);
-        if (!resolvedNonLangTaggedValues.isEmpty()) {
-            return new LanguageValueFieldMap(fieldName, Language.DEF, resolvedNonLangTaggedValues);
+
+        //  Check if the value contains at least 1 unicode letter or number (otherwise ignore)
+        List<String> cleanDefValues = resolvedNonLangTaggedValues.stream().filter(value -> unicodeNumberPattern.matcher(value).find()).collect(Collectors.toList());
+
+        if (!cleanDefValues.isEmpty()) {
+            return new LanguageValueFieldMap(fieldName, Language.DEF, cleanDefValues);
         }
         return null;
     }

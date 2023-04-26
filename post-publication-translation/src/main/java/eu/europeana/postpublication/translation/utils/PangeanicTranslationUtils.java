@@ -50,7 +50,6 @@ public class PangeanicTranslationUtils {
     public static HttpPost createTranslateRequest(String translateEndpoint, List<String> texts, String targetLanguage, String sourceLanguage, String apikey) throws JSONException {
         HttpPost post = new HttpPost(translateEndpoint);
         JSONObject body = PangeanicTranslationUtils.createTranslateRequestBody(texts, targetLanguage, sourceLanguage, apikey, true);
-        System.out.println(body);
         post.setEntity(new StringEntity(body.toString(), StandardCharsets.UTF_8));
         post.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
@@ -189,8 +188,6 @@ public class PangeanicTranslationUtils {
                 } else if (nonTranslatedDataExists) {
                     // add non-translated values as it is. Only if "zxx" or no-lang detected responses were present.
                     translations.add(text);
-                } else {
-                    translations.add(null); // if translation service did not return anything back
                 }
             }
         } else {
