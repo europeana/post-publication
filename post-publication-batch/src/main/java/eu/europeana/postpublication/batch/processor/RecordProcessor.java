@@ -32,7 +32,7 @@ public class RecordProcessor implements ItemProcessor<FullBean, FullBean> {
         bean = translateFilterService.translateProxyFields(bean, Language.ENGLISH);
 
         //update the timestamp for the bean after processing
-        bean.setTimestampUpdated(new Date());
+       // bean.setTimestampUpdated(new Date());
 
         return bean;
     }
