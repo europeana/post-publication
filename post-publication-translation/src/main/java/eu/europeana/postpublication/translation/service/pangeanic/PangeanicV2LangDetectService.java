@@ -82,8 +82,9 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
      */
     private List<String> sendDetectRequestAndParse(HttpPost post) throws IOException, JSONException, TranslationException {
         try (CloseableHttpResponse response = detectClient.execute(post)) {
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                throw new IOException("Error from Pangeanic Translation API: " +
+            // Pageanic BUG - sometimes language detect sends 400 Bad request with proper response and error message
+            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK && response.getStatusLine().getStatusCode() != HttpStatus.SC_BAD_REQUEST) {
+                throw new IOException("Error from Pangeanic Language Detect API: " +
                         response.getStatusLine().getStatusCode() + " - " + response.getStatusLine().getReasonPhrase());
             } else {
                 String json = EntityUtils.toString(response.getEntity());
@@ -92,6 +93,12 @@ public class PangeanicV2LangDetectService implements LanguageDetectionService {
                     throw new TranslationException("Language detect returned an empty response");
                 }
                 JSONObject obj = new JSONObject(json);
+
+                // if json doesn't have detected lanaguge throw a error
+                if (obj.has(PangeanicTranslationUtils.DETECTED_LANGUAGE)) {
+                    throw new TranslationException("Language detect response doesn't have detected_langs tags");
+                }
+
                 List<String> result = new ArrayList<>();
                 JSONArray detectedLangs = obj.getJSONArray(PangeanicTranslationUtils.DETECTED_LANGUAGE);
                 for (int i = 0; i < detectedLangs.length(); i++) {
