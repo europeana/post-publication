@@ -159,12 +159,16 @@ public class LanguageDetectionUtils {
         List<String> resolvedNonLangTaggedValues = checkForUrisAndGetPrefLabel(bean, defValues);
 
         //  Check if the value contains at least 1 unicode letter or number (otherwise ignore)
-        List<String> cleanDefValues = resolvedNonLangTaggedValues.stream().filter(value -> unicodeNumberPattern.matcher(value).find()).collect(Collectors.toList());
+        List<String> cleanDefValues = filterValuesWithAtleastOneUnicodeOrNumber(resolvedNonLangTaggedValues);
 
         if (!cleanDefValues.isEmpty()) {
             return new LanguageValueFieldMap(fieldName, Language.DEF, cleanDefValues);
         }
         return null;
+    }
+
+    public static List<String> filterValuesWithAtleastOneUnicodeOrNumber(List<String> valuesToFilter) {
+       return valuesToFilter.stream().filter(value -> unicodeNumberPattern.matcher(value).find()).collect(Collectors.toList());
     }
 
     private static List<String> checkForUrisAndGetPrefLabel(FullBean bean, List<String> nonLanguageTaggedValues) {

@@ -8,6 +8,7 @@ import eu.europeana.postpublication.translation.exception.InvalidParamValueExcep
 import eu.europeana.postpublication.translation.exception.TranslationException;
 import eu.europeana.postpublication.translation.model.*;
 import eu.europeana.postpublication.translation.service.TranslationService;
+import eu.europeana.postpublication.translation.utils.LanguageDetectionUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -230,10 +231,13 @@ public class RecordTranslateService extends BaseRecordService {
 
         // Get the value only if there is NO "en" language tag already present for the field in any proxy and there is value present for the sourceLang
         if (origFieldData != null && !origFieldData.isEmpty()  && !origFieldData.containsKey(Language.ENGLISH) && origFieldData.containsKey(sourceLang)) {
-            map.add(field.getName(), getValuesToTranslate(origFieldData, sourceLang, bean));
+            List<String> valuesToTranslateForField = getValuesToTranslate(origFieldData, sourceLang, bean);
+            if (!valuesToTranslateForField.isEmpty()) {
+                map.add(field.getName(),valuesToTranslateForField);
+            }
         }
         // if contains english add it in the list
-        if(origFieldData != null && !origFieldData.isEmpty()  && origFieldData.containsKey(Language.ENGLISH)) {
+        if (origFieldData != null && !origFieldData.isEmpty()  && origFieldData.containsKey(Language.ENGLISH)) {
             otherProxyFieldsWithEnglishValues.add(field.getName());
         }
 
@@ -267,7 +271,7 @@ public class RecordTranslateService extends BaseRecordService {
                 valuesToTranslate.add(value); // add non uri values
             }
         }
-        return valuesToTranslate;
+        return LanguageDetectionUtils.filterValuesWithAtleastOneUnicodeOrNumber(valuesToTranslate);
     }
 
 
