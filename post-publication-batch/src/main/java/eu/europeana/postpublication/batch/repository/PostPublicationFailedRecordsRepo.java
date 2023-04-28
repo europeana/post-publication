@@ -58,20 +58,18 @@ public class PostPublicationFailedRecordsRepo {
             long failed = sourceRecords-targetRecords;
             logger.info("For dataset {} , Total records - {}, Migrated - {} , Failed - {}", set, sourceRecords, targetRecords, failed);
             if (failed > 0) {
-               List<String> failedRecords =  batchRecordService.getRemainingRecords(set, publisher.getMigratedRecords(set));
-
-               // if failed records are more than 1/4 of the size of the set then fail the set
-               if (failedRecords.size() > (sourceRecords/4)) {
-                   logger.info("Failing the set - {}", set);
-                   failedRecordsOrSets.put(set, new ArrayList<>());
-               } else {
-                   // add failed records for the set
-                   failedRecordsOrSets.put(set, failedRecords);
-               }
-               failedMetadata.setFailedRecords(failedRecordsOrSets);
-
+                // if failed records are more than 1/4 of the size of the set then fail the set
+                if (failed > (sourceRecords/4)) {
+                    logger.info("Failing the set - {}", set);
+                    failedRecordsOrSets.put(set, new ArrayList<>());
+                } else {
+                    //  otherwise add failed records for the set
+                    List<String> failedRecords =  batchRecordService.getRemainingRecords(set, publisher.getMigratedRecords(set));
+                    failedRecordsOrSets.put(set, failedRecords);
+                }
            }
         });
+        failedMetadata.setFailedRecords(failedRecordsOrSets);
     }
 
 
