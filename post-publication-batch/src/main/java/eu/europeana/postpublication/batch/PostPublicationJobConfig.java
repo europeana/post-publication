@@ -2,9 +2,11 @@ package eu.europeana.postpublication.batch;
 
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
 import eu.europeana.postpublication.batch.listener.PostPublicationUpdateListener;
+import eu.europeana.postpublication.batch.model.PostPublicationFailedMetadata;
 import eu.europeana.postpublication.batch.model.PostPublicationJobMetadata;
 import eu.europeana.postpublication.batch.processor.RecordProcessor;
 import eu.europeana.postpublication.batch.reader.ItemReaderConfig;
+import eu.europeana.postpublication.batch.repository.PostPublicationFailedRecordsRepo;
 import eu.europeana.postpublication.batch.repository.PostPublicationJobMetadataRepo;
 import eu.europeana.postpublication.batch.writer.RecordWriter;
 import eu.europeana.postpublication.batch.config.PostPublicationSettings;
@@ -48,12 +50,14 @@ public class PostPublicationJobConfig {
     private final BatchSyncStats stats;
 
     private final PostPublicationJobMetadataRepo postPublicationJobMetaRepository;
+    private final PostPublicationFailedRecordsRepo postPublicationFailedRecordsRepository;
+
     private final TaskExecutor postPublicationTaskExecutor;
 
 
     public PostPublicationJobConfig(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory, RecordProcessor recordProcessor,
                                     RecordWriter recordWriter, PostPublicationSettings postPublicationSettings, PostPublicationUpdateListener postPublicationUpdateListener, ItemReaderConfig itemReaderConfig,
-                                    BatchSyncStats stats, PostPublicationJobMetadataRepo postPublicationJobMetaRepository, @Qualifier(AppConstants.PP_SYNC_TASK_EXECUTOR) TaskExecutor postPublicationTaskExecutor) {
+                                    BatchSyncStats stats, PostPublicationJobMetadataRepo postPublicationJobMetaRepository, PostPublicationFailedRecordsRepo postPublicationFailedRecordsRepository, @Qualifier(AppConstants.PP_SYNC_TASK_EXECUTOR) TaskExecutor postPublicationTaskExecutor) {
         this.jobBuilderFactory = jobBuilderFactory;
         this.stepBuilderFactory = stepBuilderFactory;
         this.recordProcessor = recordProcessor;
@@ -63,6 +67,7 @@ public class PostPublicationJobConfig {
         this.itemReaderConfig = itemReaderConfig;
         this.stats = stats;
         this.postPublicationJobMetaRepository = postPublicationJobMetaRepository;
+        this.postPublicationFailedRecordsRepository = postPublicationFailedRecordsRepository;
         this.postPublicationTaskExecutor = postPublicationTaskExecutor;
     }
 
@@ -72,6 +77,8 @@ public class PostPublicationJobConfig {
         if(!postPublicationSettings.IsFrameworkEnabled()) {
             return null;
         }
+
+        PostPublicationFailedMetadata failedMetadata = new PostPublicationFailedMetadata();
 
         PostPublicationJobMetadata jobMetadata = postPublicationJobMetaRepository.getMostRecentPostPublicationMetadata();
         Instant from = Instant.EPOCH;
@@ -101,6 +108,7 @@ public class PostPublicationJobConfig {
                 .next(migrateRecordsStep(from, datasetsToProcess))
                 .next(finishStats(stats, startTime))
                 .next(updatePostPublicationJobMetadata(jobMetadata))
+                .next(updatePostPublicationJobFailedMetadata(failedMetadata))
                 .build();
     }
 
@@ -163,5 +171,15 @@ public class PostPublicationJobConfig {
                 .tasklet(new PostPublicationMetadataUpdaterTasklet(postPublicationJobMetaRepository, jobMetadata))
                 .build();
     }
+
+
+    private Step updatePostPublicationJobFailedMetadata(PostPublicationFailedMetadata failedMetadata) {
+        return stepBuilderFactory
+               .get("progressReport")
+               .tasklet(new PostPublicationFailedRecordsUpdaterTasklet(postPublicationFailedRecordsRepository, failedMetadata))
+               .build();
+
+    }
+
 }
 
