@@ -22,10 +22,16 @@ public class PostPublicationFailedRecordsUpdaterTasklet implements Tasklet {
     }
 
     @Override
-    public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext)
-            throws Exception {
-        repository.progress(metadata);
-        repository.save(metadata);
+    public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
+        // save the new metadata. Only if there will be failed data this will be saved
+        repository.save(repository.progress(metadata));
+
+        // update the old metadata
+        if (metadata != null && !metadata.getFailedRecords().isEmpty()) {
+            metadata.setProcessed(true);
+            repository.save(metadata);
+           // repository.delete(metadata); // remove old entry
+        }
         logger.info("Saved failed metadata");
         return RepeatStatus.FINISHED;
     }

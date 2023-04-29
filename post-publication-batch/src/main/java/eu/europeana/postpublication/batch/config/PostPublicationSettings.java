@@ -126,7 +126,7 @@ public class PostPublicationSettings implements InitializingBean {
 
     public List<String> getDatasetsToProcess() {
         if(StringUtils.isNotEmpty(datasetsToProcess)) {
-            return Arrays.asList(datasetsToProcess.split("\\s*,\\s*"));
+            return new ArrayList<>(Arrays.asList(datasetsToProcess.split("\\s*,\\s*")));
         }
         return new ArrayList<>();
     }

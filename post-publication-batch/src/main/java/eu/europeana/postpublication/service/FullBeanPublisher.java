@@ -64,7 +64,7 @@ public class FullBeanPublisher extends FullBeanUpdater {
     }
 
     /**
-     * Uses pagination to fetch the records using MorphiaUtils from metis-common-mongo
+     * Get the total records exists for the set
      * @param datasetId datasets for records count
      * @return
      */
@@ -72,6 +72,22 @@ public class FullBeanPublisher extends FullBeanUpdater {
         Query<FullBeanImpl> query = this.edmMongoClient.getDatastore().find(FullBeanImpl.class);
         query.filter(Filters.regex(ABOUT).pattern("^/" + datasetId + "/"));
         return query.count();
+    }
+
+    /**
+     * Get the records
+     * @param recordIds datasets for records count
+     * @return
+     */
+    public List<String> getRecordsIfExists(List<String> recordIds) {
+        List<String> projectionFields = new ArrayList<>();
+        projectionFields.add(ABOUT);
+
+        Query<FullBeanImpl> query = this.edmMongoClient.getDatastore().find(FullBeanImpl.class)
+                .filter(Filters.in(ABOUT, recordIds));
+
+        return MorphiaUtils.getListOfQueryRetryable(query, new FindOptions().projection().include(projectionFields.toArray(String[]::new)))
+                .stream().map(FullBeanImpl :: getAbout).collect(Collectors.toList());
     }
 
     /**
@@ -89,6 +105,4 @@ public class FullBeanPublisher extends FullBeanUpdater {
         return MorphiaUtils.getListOfQueryRetryable(query, new FindOptions().projection().include(projectionFields.toArray(String[]::new)))
                 .stream().map(FullBeanImpl :: getAbout).collect(Collectors.toList());
     }
-
-
 }

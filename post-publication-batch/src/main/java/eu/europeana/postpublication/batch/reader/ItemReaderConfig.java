@@ -30,14 +30,15 @@ public class ItemReaderConfig {
     /**
      * Creates a database reader with query filters
      * {$match : {timestampUpdated :{$gte : "date"}}}
-     * {$or : [{"about" : {$regex : '^/D1/'}},{"about" : {$regex : '^/D2/'}} , {"about" : {$regex : '^/D3/'}}]}
+     * {$or : [{"about" : {$regex : '^/D1/'}},{"about" : {$regex : '^/D2/'}} , {"about" : {$regex : '^/D3/'}}, {"about" : {$in : ["record1", "record2" ]}}]}
      *
      * @param currentStartTime
      * @param datasetToProcess
      * @return
      */
-    public SynchronizedItemStreamReader<FullBean> createRecordReader(Instant currentStartTime, List<String> datasetToProcess) {
+    public SynchronizedItemStreamReader<FullBean> createRecordReader(Instant currentStartTime, List<String> datasetToProcess, List<String> recordsToProcess) {
         List<Filter> filters = new ArrayList<>();
+        List<Filter> orFilters = new ArrayList<>();
 
         // TODO commnted out for now for the First DB migration with translations
         // Fetch record whose timestampUpdated is more than currentStartTime
@@ -46,11 +47,20 @@ public class ItemReaderConfig {
 //        }
 
         // add the regexFilter on about fields if datasets are present
-        if(!datasetToProcess.isEmpty()) {
+        if (!datasetToProcess.isEmpty()) {
             List<RegexFilter> regexFilters = new ArrayList<>();
             datasetToProcess.stream().forEach(dataset -> regexFilters.add(Filters.regex(ABOUT).pattern("^/" + dataset + "/")));
-            filters.add(Filters.or(regexFilters.toArray(new Filter[0])));
+            orFilters.addAll(regexFilters);
         }
+
+        // add $in filter for records in the orFilter
+        if (!recordsToProcess.isEmpty()) {
+            orFilters.add(Filters.in(ABOUT, recordsToProcess));
+        }
+
+        // prepare the or filter
+        filters.add(Filters.or(orFilters.toArray(new Filter[0])));
+
             RecordDatabaseReader reader =
                     new RecordDatabaseReader(
                             batchRecordService, postPublicationSettings.getBatchChunkSize(),
@@ -66,6 +76,4 @@ public class ItemReaderConfig {
         synchronizedItemStreamReader.setDelegate(reader);
         return synchronizedItemStreamReader;
     }
-
-
 }

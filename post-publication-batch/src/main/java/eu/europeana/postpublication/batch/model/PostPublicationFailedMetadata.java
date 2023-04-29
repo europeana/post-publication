@@ -13,7 +13,10 @@ public class PostPublicationFailedMetadata {
 
     @Id
     private ObjectId dbId;
+
     Map<String, List<String>> failedRecords = new HashMap<>();
+
+    boolean processed; // be default false
 
     public PostPublicationFailedMetadata() {
         // no-arg constructor
@@ -25,5 +28,13 @@ public class PostPublicationFailedMetadata {
 
     public void setFailedRecords(Map<String, List<String>> failedRecords) {
         this.failedRecords = failedRecords;
+    }
+
+    public boolean isProcessed() {
+        return processed;
+    }
+
+    public void setProcessed(boolean processed) {
+        this.processed = processed;
     }
 }
