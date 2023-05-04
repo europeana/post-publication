@@ -63,6 +63,9 @@ public class BatchRecordService {
     /**
      * Get the list of recordsIds for the set
      * @param datasetId datasets for records count
+     * @param europeanaIds list of ids to exclude
+     *
+     * NOTE : throws exception for larger datasets as the query itself increases the 16 MB size limit
      * @return
      */
     public List<String> getRemainingRecords(String datasetId, List<String> europeanaIds) {
@@ -93,6 +96,22 @@ public class BatchRecordService {
         Query<FullBeanImpl> query = this.datastore.find(FullBeanImpl.class);
         query.filter(Filters.regex("about").pattern("^/" + datasetId + "/"));
         return query.count();
+    }
+
+    /**
+     * Get Records ids for the dataset
+     * @param datasetId datasets for records count
+     * @return
+     */
+    public List<String> getRecordsIds(String datasetId) {
+        List<String> projectionFields = new ArrayList<>();
+        projectionFields.add(ABOUT);
+
+        Query<FullBeanImpl> query = this.datastore.find(FullBeanImpl.class)
+                .filter(Filters.regex(ABOUT).pattern("^/" + datasetId + "/"));
+
+        return MorphiaUtils.getListOfQueryRetryable(query, new FindOptions().projection().include(projectionFields.toArray(String[]::new)))
+                .stream().map(FullBeanImpl :: getAbout).collect(Collectors.toList());
     }
 
 }

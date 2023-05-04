@@ -16,6 +16,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -95,8 +96,9 @@ public class PostPublicationFailedRecordsRepo {
                     failedRecordsOrSets.put(set, new ArrayList<>());
                 } else {
                     //  otherwise add failed records for the set
-                    List<String> failedRecords =  batchRecordService.getRemainingRecords(set, publisher.getMigratedRecords(set));
-                    failedRecordsOrSets.put(set, failedRecords);
+                    List<String> recordIdsInSource =  batchRecordService.getRecordsIds(set);
+                    recordIdsInSource.removeAll(new HashSet<>(publisher.getMigratedRecords(set)));
+                    failedRecordsOrSets.put(set, recordIdsInSource);
                 }
            }
         });
