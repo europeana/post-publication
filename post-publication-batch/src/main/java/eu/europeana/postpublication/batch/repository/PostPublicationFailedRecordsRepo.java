@@ -66,7 +66,6 @@ public class PostPublicationFailedRecordsRepo {
                     //  otherwise add failed records for the set
                     List<String> recordIdsInSource =  batchRecordService.getRecordsIds(set);
                     recordIdsInSource.removeAll(new HashSet<>(publisher.getMigratedRecords(set)));
-                    logger.info("adding the {} failed records for set {}", recordIdsInSource.size(), set);
                     failedRecordsOrSets.put(set, recordIdsInSource);
                 }
            }
