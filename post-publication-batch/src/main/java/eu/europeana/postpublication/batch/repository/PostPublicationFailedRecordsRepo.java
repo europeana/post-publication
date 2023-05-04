@@ -2,6 +2,7 @@ package eu.europeana.postpublication.batch.repository;
 
 import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
+import dev.morphia.query.experimental.filters.Filters;
 import eu.europeana.postpublication.batch.config.PostPublicationSettings;
 import eu.europeana.postpublication.batch.model.PostPublicationFailedMetadata;
 import eu.europeana.postpublication.service.BatchRecordService;
@@ -37,6 +38,7 @@ public class PostPublicationFailedRecordsRepo {
     public PostPublicationFailedMetadata getPostPublicationFailedMetadata() {
         return datastore
                 .find(PostPublicationFailedMetadata.class)
+                .filter(Filters.eq("processed", false))
                 .iterator(new FindOptions().limit(1))
                 .tryNext();
     }
