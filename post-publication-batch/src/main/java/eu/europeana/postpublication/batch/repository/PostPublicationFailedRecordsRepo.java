@@ -2,7 +2,6 @@ package eu.europeana.postpublication.batch.repository;
 
 import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
-import eu.europeana.postpublication.batch.PostPublicationJobConfig;
 import eu.europeana.postpublication.batch.config.PostPublicationSettings;
 import eu.europeana.postpublication.batch.model.PostPublicationFailedMetadata;
 import eu.europeana.postpublication.service.BatchRecordService;
@@ -14,6 +13,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -64,8 +64,10 @@ public class PostPublicationFailedRecordsRepo {
                     failedRecordsOrSets.put(set, new ArrayList<>());
                 } else {
                     //  otherwise add failed records for the set
-                    List<String> failedRecords =  batchRecordService.getRemainingRecords(set, publisher.getMigratedRecords(set));
-                    failedRecordsOrSets.put(set, failedRecords);
+                    List<String> recordIdsInSource =  batchRecordService.getRecordsIds(set);
+                    recordIdsInSource.removeAll(new HashSet<>(publisher.getMigratedRecords(set)));
+                    logger.info("adding the {} failed records for set {}", recordIdsInSource.size(), set);
+                    failedRecordsOrSets.put(set, recordIdsInSource);
                 }
            }
         });
