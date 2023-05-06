@@ -5,6 +5,7 @@ import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
 import eu.europeana.postpublication.batch.config.PostPublicationSettings;
 import eu.europeana.postpublication.batch.model.PostPublicationFailedMetadata;
+import eu.europeana.postpublication.batch.utils.BatchUtils;
 import eu.europeana.postpublication.service.BatchRecordService;
 import eu.europeana.postpublication.service.FullBeanPublisher;
 import eu.europeana.postpublication.utils.AppConstants;
@@ -73,6 +74,7 @@ public class PostPublicationFailedRecordsRepo {
            }
         });
         failedMetadata.setFailedRecords(failedRecordsOrSets);
+        logger.info("Sets to process - {}", BatchUtils.getSetsToProcess(failedRecordsOrSets));
     }
 
 
