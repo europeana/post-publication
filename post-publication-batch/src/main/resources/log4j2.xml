@@ -22,9 +22,9 @@
                 <Pattern>%d{HH:mm:ss.SSS} %level %C:%L [%t] - %m%n</Pattern>
             </PatternLayout>
             <Policies>
-                <SizeBasedTriggeringPolicy size="50MB" />
+                <SizeBasedTriggeringPolicy size="60MB" />
             </Policies>
-            <DefaultRolloverStrategy max="100"/>
+            <DefaultRolloverStrategy max="300"/>
         </RollingFile>
     </Appenders>
 
