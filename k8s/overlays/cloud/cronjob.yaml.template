@@ -36,11 +36,11 @@ spec:
                           -XX:+UseParallelGC -XX:MaxRAMPercentage=75"
               resources:
                 requests:
-                  memory: "${POST_PUBLICATION_MEMORY}M"
-                  cpu: "${POST_PUBLICATION_CPU}m"
+                  memory: "${POST_PUBLICATION_MEMORY_REQUEST}M"
+                  cpu: "${POST_PUBLICATION_CPU_REQUEST}m"
                 limits:
-                  memory: "${POST_PUBLICATION_MEMORY}M"
-                  cpu: "${POST_PUBLICATION_CPU}m"
+                  memory: "${POST_PUBLICATION_MEMORY_LIMIT}M"
+                  cpu: "${POST_PUBLICATION_CPU_LIMIT}m"
               volumeMounts:
                 - name: post-publication-properties
                   mountPath: "/opt/app/config/post-publication.user.properties"
