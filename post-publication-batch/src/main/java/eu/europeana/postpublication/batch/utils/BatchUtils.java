@@ -26,4 +26,14 @@ public class BatchUtils {
         return  sets.toString();
     }
 
+    public static int getTotalFailed(Map<String, List<String>> failedSetsOrRecords) {
+        int failed =0;
+        for (Map.Entry<String, List<String>> entry : failedSetsOrRecords.entrySet()) {
+            if (!entry.getValue().isEmpty()) {
+                failed += entry.getValue().size();
+            }
+        }
+        return failed;
+    }
+
 }
