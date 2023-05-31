@@ -105,7 +105,7 @@ public class PostPublicationJobConfig {
         return this.jobBuilderFactory
                 .get(POST_PUBLICATION_PIPELINE)
                 .start(initStats(stats, startTime))
-               // .next(migrateRecordsStep(from, datasetsToProcess))
+                .next(migrateRecordsStep(from, datasetsToProcess))
                 .next(finishStats(stats, startTime))
                 .next(updatePostPublicationJobMetadata(jobMetadata))
                 .next(updatePostPublicationJobFailedMetadata(failedMetadata))
