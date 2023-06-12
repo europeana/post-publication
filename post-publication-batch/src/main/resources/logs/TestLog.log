@@ -1,0 +1,32 @@
+21:07:54.419 DEBUG eu.europeana.postpublication.translation.utils.LanguageDetectionUtils:54 [postPublicationTaskExecutor-1] - EDM language - [SV] fetched for record - /91607/SMVK_EM_delobjekt_1003982 
+21:07:54.420 DEBUG eu.europeana.postpublication.translation.service.impl.RecordLangDetectionService:48 [postPublicationTaskExecutor-1] - For record /91607/SMVK_EM_delobjekt_1003982, hint for lang-detection is sv 
+21:07:54.430 DEBUG eu.europeana.postpublication.translation.service.impl.RecordLangDetectionService:99 [postPublicationTaskExecutor-1] - For record /91607/SMVK_EM_delobjekt_1003982 gathered 5 fields non-language tagged values for detection. 
+21:07:54.883 INFO eu.europeana.postpublication.translation.service.impl.RecordTranslateService:80 [postPublicationTaskExecutor-1] - rid:/91607/SMVK_EM_delobjekt_1003982 started
+21:07:54.885 DEBUG eu.europeana.postpublication.translation.service.impl.RecordTranslateService:97 [postPublicationTaskExecutor-1] - Most representative language chosen for translations is  sv
+21:07:54.890 INFO eu.europeana.postpublication.translation.service.impl.RecordTranslateService:131 [postPublicationTaskExecutor-1] - rid:/91607/SMVK_EM_delobjekt_1003982 attempted
+21:07:55.007 INFO eu.europeana.postpublication.translation.model.TranslationMap:99 [postPublicationTaskExecutor-1] - rid:/91607/SMVK_EM_delobjekt_1003982 0 0 1 dcPublisher sv
+21:07:55.007 INFO eu.europeana.postpublication.translation.model.TranslationMap:99 [postPublicationTaskExecutor-1] - rid:/91607/SMVK_EM_delobjekt_1003982 0 0 3 dctermsExtent sv
+21:07:55.008 INFO eu.europeana.postpublication.translation.model.TranslationMap:99 [postPublicationTaskExecutor-1] - rid:/91607/SMVK_EM_delobjekt_1003982 0 0 3 dcDescription sv
+21:07:55.008 INFO eu.europeana.postpublication.translation.model.TranslationMap:99 [postPublicationTaskExecutor-1] - rid:/91607/SMVK_EM_delobjekt_1003982 0 0 1 dcSubject sv
+21:07:55.008 INFO eu.europeana.postpublication.translation.model.TranslationMap:99 [postPublicationTaskExecutor-1] - rid:/91607/SMVK_EM_delobjekt_1003982 0 0 1 dcTitle sv
+21:07:55.008 INFO eu.europeana.postpublication.translation.model.TranslationMap:99 [postPublicationTaskExecutor-1] - rid:/91607/SMVK_EM_delobjekt_1003982 0 0 2 dcType sv
+21:15:10.728 INFO eu.europeana.postpublication.translation.service.impl.RecordTranslateService:80 [postPublicationTaskExecutor-1] - rid:/11613/ENTOMOLOGY_NM_CZECHREPUBLIC_E134 started
+21:15:10.730 DEBUG eu.europeana.postpublication.translation.service.impl.RecordTranslateService:97 [postPublicationTaskExecutor-1] - Most representative language chosen for translations is  cs
+21:15:10.765 INFO eu.europeana.postpublication.translation.service.impl.RecordTranslateService:131 [postPublicationTaskExecutor-1] - rid:/11613/ENTOMOLOGY_NM_CZECHREPUBLIC_E134 attempted
+21:15:10.828 INFO eu.europeana.postpublication.translation.model.TranslationMap:99 [postPublicationTaskExecutor-1] - rid:/11613/ENTOMOLOGY_NM_CZECHREPUBLIC_E134 0 0 1 dcDate cs
+21:15:10.828 INFO eu.europeana.postpublication.translation.model.TranslationMap:99 [postPublicationTaskExecutor-1] - rid:/11613/ENTOMOLOGY_NM_CZECHREPUBLIC_E134 0 0 1 dcTitle cs
+21:15:10.828 INFO eu.europeana.postpublication.translation.model.TranslationMap:99 [postPublicationTaskExecutor-1] - rid:/11613/ENTOMOLOGY_NM_CZECHREPUBLIC_E134 0 0 2 dctermsSpatial cs
+22:52:36.079 INFO eu.europeana.postpublication.translation.service.impl.RecordTranslateService:80 [postPublicationTaskExecutor-5] - rid:/782/object_TNLOFHF_M_III_24__4DXI2O6 started
+22:52:36.080 INFO eu.europeana.postpublication.translation.service.impl.RecordTranslateService:131 [postPublicationTaskExecutor-5] - rid:/782/object_TNLOFHF_M_III_24__4DXI2O6 attempted
+22:52:36.327 INFO eu.europeana.postpublication.translation.model.TranslationMap:125 [postPublicationTaskExecutor-5] - rid:/782/object_TNLOFHF_M_III_24__4DXI2O6 1 0 0 dcDate cs
+22:52:36.327 INFO eu.europeana.postpublication.translation.model.TranslationMap:125 [postPublicationTaskExecutor-5] - rid:/782/object_TNLOFHF_M_III_24__4DXI2O6 1 0 0 dctermsCreated cs
+22:52:36.328 INFO eu.europeana.postpublication.translation.model.TranslationMap:125 [postPublicationTaskExecutor-5] - rid:/782/object_TNLOFHF_M_III_24__4DXI2O6 1 0 0 edmCurrentLocation cs
+22:52:36.328 INFO eu.europeana.postpublication.translation.service.impl.RecordTranslateService:134 [postPublicationTaskExecutor-5] - rid:/782/object_TNLOFHF_M_III_24__4DXI2O6 translated
+22:52:42.462 INFO eu.europeana.postpublication.translation.service.impl.RecordTranslateService:80 [postPublicationTaskExecutor-5] - rid:/782/object_VKO___M_II_136____2HSJVY1 started
+22:52:42.463 INFO eu.europeana.postpublication.translation.service.impl.RecordTranslateService:131 [postPublicationTaskExecutor-5] - rid:/782/object_VKO___M_II_136____2HSJVY1 attempted
+22:52:42.898 INFO eu.europeana.postpublication.translation.model.TranslationMap:99 [postPublicationTaskExecutor-5] - rid:/782/object_VKO___M_II_136____2HSJVY1 0 0 1 dctermsCreated cs
+22:52:42.898 INFO eu.europeana.postpublication.translation.model.TranslationMap:99 [postPublicationTaskExecutor-5] - rid:/782/object_VKO___M_II_136____2HSJVY1 0 0 2 dcDescription cs
+22:52:42.898 INFO eu.europeana.postpublication.translation.model.TranslationMap:99 [postPublicationTaskExecutor-5] - rid:/782/object_VKO___M_II_136____2HSJVY1 0 0 1 dcTitle cs
+22:52:42.899 INFO eu.europeana.postpublication.translation.model.TranslationMap:99 [postPublicationTaskExecutor-5] - rid:/782/object_VKO___M_II_136____2HSJVY1 0 0 1 dctermsExtent cs
+22:52:42.899 INFO eu.europeana.postpublication.translation.model.TranslationMap:99 [postPublicationTaskExecutor-5] - rid:/782/object_VKO___M_II_136____2HSJVY1 0 0 1 edmCurrentLocation cs
+13:01:10.101 INFO eu.europeana.postpublication.PostPublicationApp:62 [main] - Running the application with arguments -  args: {}

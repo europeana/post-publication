@@ -23,6 +23,7 @@ spec:
                 - java
                 - -jar
                 - /opt/app/post-publication-api.jar
+                - pushLogs                            ## have to test this yet
               env:
                 - name: SPRING_CONFIG_ADDITIONAL_LOCATION
                   value: "file:/opt/app/config/post-publication.user.properties"
