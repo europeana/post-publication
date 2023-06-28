@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+             <!--Kubernetes pattern-->
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} %level %C:%L [%t] - %m%n" />
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+        </Root>
+
+        <Logger name="eu.europeana.push.logs" level="INFO"/>
+    </Loggers>
+</Configuration>

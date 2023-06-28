@@ -4,6 +4,7 @@
     <modules>
         <module>post-publication-batch</module>
         <module>post-publication-translation</module>
+        <module>post-publication-flush-logs</module>
     </modules>
 
     <parent>
