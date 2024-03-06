@@ -76,7 +76,7 @@ public class PostPublicationJobConfig {
 
     @Bean
     public Job syncRecords() {
-        if(!postPublicationSettings.IsFrameworkEnabled()) {
+        if (!postPublicationSettings.IsFrameworkEnabled()) {
             return null;
         }
 
