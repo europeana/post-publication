@@ -8,6 +8,7 @@ import eu.europeana.postpublication.batch.processor.RecordProcessor;
 import eu.europeana.postpublication.batch.reader.ItemReaderConfig;
 import eu.europeana.postpublication.batch.repository.PostPublicationFailedRecordsRepo;
 import eu.europeana.postpublication.batch.repository.PostPublicationJobMetadataRepo;
+import eu.europeana.postpublication.batch.utils.BatchUtils;
 import eu.europeana.postpublication.batch.writer.RecordWriter;
 import eu.europeana.postpublication.batch.config.PostPublicationSettings;
 import eu.europeana.postpublication.exception.MongoConnnectionException;
@@ -28,6 +29,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -74,11 +76,9 @@ public class PostPublicationJobConfig {
 
     @Bean
     public Job syncRecords() {
-        if(!postPublicationSettings.IsFrameworkEnabled()) {
+        if (!postPublicationSettings.IsFrameworkEnabled()) {
             return null;
         }
-
-        PostPublicationFailedMetadata failedMetadata = new PostPublicationFailedMetadata();
 
         PostPublicationJobMetadata jobMetadata = postPublicationJobMetaRepository.getMostRecentPostPublicationMetadata();
         Instant from = Instant.EPOCH;
@@ -96,6 +96,16 @@ public class PostPublicationJobConfig {
         jobMetadata.setLastSuccessfulStartTime(startTime);
         List<String> datasetsToProcess = postPublicationSettings.getDatasetsToProcess();
 
+        // add the failed sets and records for processing
+        List<String> recordsToProcess = new ArrayList<>();
+        PostPublicationFailedMetadata failedMetadata = postPublicationFailedRecordsRepository.getPostPublicationFailedMetadata(); // get the one which is not processed
+        if (failedMetadata != null) {
+            // if present datasets and records will be added for processing
+            BatchUtils.processFailedData(failedMetadata.getFailedRecords(), datasetsToProcess, recordsToProcess);
+        } else {
+            failedMetadata = new PostPublicationFailedMetadata();
+        }
+
         if (logger.isInfoEnabled()) {
             logger.info(
                     "Starting post publication pipeline job. Fetching Records update after {}",
@@ -105,7 +115,7 @@ public class PostPublicationJobConfig {
         return this.jobBuilderFactory
                 .get(POST_PUBLICATION_PIPELINE)
                 .start(initStats(stats, startTime))
-                .next(migrateRecordsStep(from, datasetsToProcess))
+                .next(migrateRecordsStep(from, datasetsToProcess, recordsToProcess))
                 .next(finishStats(stats, startTime))
                 .next(updatePostPublicationJobMetadata(jobMetadata))
                 .next(updatePostPublicationJobFailedMetadata(failedMetadata))
@@ -123,11 +133,11 @@ public class PostPublicationJobConfig {
      * @param start
      * @return
      */
-    private Step migrateRecordsStep(Instant start, List<String> datasetsToProcess) {
+    private Step migrateRecordsStep(Instant start, List<String> datasetsToProcess, List<String> recordsToProcess) {
         return this.stepBuilderFactory
                 .get("migrateRecordsStep")
                 .<FullBean, FullBean>chunk(postPublicationSettings.getBatchChunkSize())
-                .reader(itemReaderConfig.createRecordReader(start, datasetsToProcess))
+                .reader(itemReaderConfig.createRecordReader(start, datasetsToProcess, recordsToProcess))
                 .processor(recordProcessor)
                 .writer(recordWriter)
                 .listener((ItemProcessListener<? super FullBean, ? super FullBean>) postPublicationUpdateListener)

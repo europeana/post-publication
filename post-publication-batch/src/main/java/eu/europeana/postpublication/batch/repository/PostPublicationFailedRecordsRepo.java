@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -50,11 +51,39 @@ public class PostPublicationFailedRecordsRepo {
         }
     }
 
-    public void progress(PostPublicationFailedMetadata failedMetadata) {
+    public void delete(PostPublicationFailedMetadata failedMetadata) {
+        datastore.delete(failedMetadata);
+    }
+
+    /**
+     * Logs the progress of each set and record that was added for processing
+     *
+     * if failed data was present for processing, that is also included in the progress report
+     *
+     * It determines if the set is succesfully migrated to target DB
+     * if not, check for the number of records that are missing.
+     * If the number of records missing is more than 1/4 of the size of the set - set is identified a failed
+     * If number of records missing is less than 1/4 of the size of the set - records that are missing are identified as failed
+     *
+     * Both the failed sets and records are added in Failed Metadata
+     *
+     * @param metadataToProcess
+     * @return
+     */
+    public PostPublicationFailedMetadata progress(PostPublicationFailedMetadata metadataToProcess) {
+        PostPublicationFailedMetadata failedMetadata = new PostPublicationFailedMetadata();
         List<String> datasetsProcessed =  settings.getDatasetsToProcess();
+        List<String> recordsProcessed = new ArrayList<>();
 
-        Map<String, List<String>> failedRecordsOrSets = failedMetadata.getFailedRecords();
+        // add the failed sets and records
+        if(metadataToProcess != null && !metadataToProcess.getFailedRecords().isEmpty()) {
+            datasetsProcessed.addAll(BatchUtils.getSetsToProcess(metadataToProcess.getFailedRecords()));
+            recordsProcessed = BatchUtils.getRecordsToProcess(metadataToProcess.getFailedRecords());
+        }
 
+        Map<String, List<String>> failedRecordsOrSets = new HashMap<>();
+
+        // datasets progress
         datasetsProcessed.stream().forEach( set -> {
             long sourceRecords =  batchRecordService.getTotalRecordsForSet(set);
             long targetRecords = publisher.getTotalRecordsForSet(set);
@@ -73,12 +102,26 @@ public class PostPublicationFailedRecordsRepo {
                 }
            }
         });
+
         failedMetadata.setFailedRecords(failedRecordsOrSets);
         logger.info("Total Failed - {}", BatchUtils.getTotalFailed(failedRecordsOrSets));
         logger.info("Sets to process - {}", BatchUtils.getSetsToProcess(failedRecordsOrSets));
+    
+
+        // records progress
+        if (!recordsProcessed.isEmpty()) {
+            List<String> processedSuccessfully = publisher.getRecordsIfExists(recordsProcessed);
+            logger.info("Records to process - {}, Successfully processed - {}", recordsProcessed.size(), processedSuccessfully.size());
+
+            if (processedSuccessfully.size() != recordsProcessed.size()) {
+                recordsProcessed.removeAll(processedSuccessfully);
+                failedRecordsOrSets.putAll(BatchUtils.convertListIntoMap(recordsProcessed));
+            }
+        }
+
+        failedMetadata.setFailedRecords(failedRecordsOrSets);
+        return failedMetadata;
     }
-
-
 
 }
 
