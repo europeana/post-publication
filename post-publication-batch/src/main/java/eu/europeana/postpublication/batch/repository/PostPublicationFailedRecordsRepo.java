@@ -105,7 +105,7 @@ public class PostPublicationFailedRecordsRepo {
 
         failedMetadata.setFailedRecords(failedRecordsOrSets);
         logger.info("Total Failed - {}", BatchUtils.getTotalFailed(failedRecordsOrSets));
-        logger.info("Sets to process - {}", BatchUtils.getSetsToProcess(failedRecordsOrSets));
+        logger.info("Failed sets to process - {}", BatchUtils.getSetsToProcess(failedRecordsOrSets));
     
 
         // records progress

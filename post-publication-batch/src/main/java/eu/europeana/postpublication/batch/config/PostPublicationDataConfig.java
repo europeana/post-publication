@@ -7,6 +7,7 @@ import eu.europeana.batch.entity.JobExecutionEntity;
 import eu.europeana.corelib.solr.bean.impl.FullBeanImpl;
 import eu.europeana.indexing.utils.TriConsumer;
 import eu.europeana.metis.mongo.dao.RecordDao;
+import eu.europeana.postpublication.batch.model.ExecutionStep;
 import eu.europeana.postpublication.translation.service.LanguageDetectionService;
 import eu.europeana.postpublication.translation.service.pangeanic.PangeanicV2LangDetectService;
 import eu.europeana.postpublication.translation.service.pangeanic.PangeanicV2TranslationService;
@@ -19,7 +20,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Configuration
 public class PostPublicationDataConfig {
@@ -107,4 +110,20 @@ public class PostPublicationDataConfig {
     }
 
 
+    /**
+     * Will create list of valid steps.
+     * @return list of steps to be exceuted
+     */
+    @Bean(name = AppConstants.EXECUTION_STEPS_BEAN)
+    public List<ExecutionStep> getExecutionSteps() {
+        List<ExecutionStep> executionSteps = new ArrayList<>();
+        for (String value: settings.getStepsToExecute()) {
+            ExecutionStep step = ExecutionStep.getStep(value);
+            if(step != null) {
+                executionSteps.add(step);
+            }
+        }
+        logger.info("Configured steps for execution: {}", executionSteps);
+        return executionSteps;
+    }
 }

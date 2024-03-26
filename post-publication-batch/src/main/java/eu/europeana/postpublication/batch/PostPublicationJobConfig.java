@@ -2,6 +2,7 @@ package eu.europeana.postpublication.batch;
 
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
 import eu.europeana.postpublication.batch.listener.PostPublicationUpdateListener;
+import eu.europeana.postpublication.batch.model.ExecutionStep;
 import eu.europeana.postpublication.batch.model.PostPublicationFailedMetadata;
 import eu.europeana.postpublication.batch.model.PostPublicationJobMetadata;
 import eu.europeana.postpublication.batch.processor.RecordProcessor;
@@ -56,10 +57,14 @@ public class PostPublicationJobConfig {
 
     private final TaskExecutor postPublicationTaskExecutor;
 
+    private final List<ExecutionStep> stepsToExecute;
+
 
     public PostPublicationJobConfig(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory, RecordProcessor recordProcessor,
                                     RecordWriter recordWriter, PostPublicationSettings postPublicationSettings, PostPublicationUpdateListener postPublicationUpdateListener, ItemReaderConfig itemReaderConfig,
-                                    BatchSyncStats stats, PostPublicationJobMetadataRepo postPublicationJobMetaRepository, PostPublicationFailedRecordsRepo postPublicationFailedRecordsRepository, @Qualifier(AppConstants.PP_SYNC_TASK_EXECUTOR) TaskExecutor postPublicationTaskExecutor) {
+                                    BatchSyncStats stats, PostPublicationJobMetadataRepo postPublicationJobMetaRepository, PostPublicationFailedRecordsRepo postPublicationFailedRecordsRepository,
+                                    @Qualifier(AppConstants.PP_SYNC_TASK_EXECUTOR) TaskExecutor postPublicationTaskExecutor,
+                                    @Qualifier(AppConstants.EXECUTION_STEPS_BEAN)List<ExecutionStep> stepsToExecute) {
         this.jobBuilderFactory = jobBuilderFactory;
         this.stepBuilderFactory = stepBuilderFactory;
         this.recordProcessor = recordProcessor;
@@ -71,6 +76,7 @@ public class PostPublicationJobConfig {
         this.postPublicationJobMetaRepository = postPublicationJobMetaRepository;
         this.postPublicationFailedRecordsRepository = postPublicationFailedRecordsRepository;
         this.postPublicationTaskExecutor = postPublicationTaskExecutor;
+        this.stepsToExecute = stepsToExecute;
     }
 
 
@@ -108,8 +114,8 @@ public class PostPublicationJobConfig {
 
         if (logger.isInfoEnabled()) {
             logger.info(
-                    "Starting post publication pipeline job. Fetching Records update after {}",
-                    from);
+                    "Starting post publication pipeline job. Fetching datasets - {} , records - {} ",
+                    datasetsToProcess, recordsToProcess);
         }
 
         return this.jobBuilderFactory
@@ -122,7 +128,13 @@ public class PostPublicationJobConfig {
                 .build();
     }
 
+
     /**
+     *
+     * Migrates the record from one DB to another.
+     *   If steps to execute contains "Translations" then translation is performed,
+     *   Or else the records are simply migrated from one DB to another
+     *
      *  Few Points :
      *
      *  #processorNonTransactional :: Have marked the item processor as non-transactional (default is the opposite).
@@ -138,7 +150,8 @@ public class PostPublicationJobConfig {
                 .get("migrateRecordsStep")
                 .<FullBean, FullBean>chunk(postPublicationSettings.getBatchChunkSize())
                 .reader(itemReaderConfig.createRecordReader(start, datasetsToProcess, recordsToProcess))
-                .processor(recordProcessor)
+                .processor(stepsToExecute.contains(ExecutionStep.TRANSLATIONS) ? recordProcessor : null )
+                //.processor(recordProcessor)
                 .writer(recordWriter)
                 .listener((ItemProcessListener<? super FullBean, ? super FullBean>) postPublicationUpdateListener)
                 .faultTolerant()

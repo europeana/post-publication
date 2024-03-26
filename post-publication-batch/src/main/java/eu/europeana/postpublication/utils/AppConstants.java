@@ -16,6 +16,8 @@ public class AppConstants {
     public static final String TRANSLATION_SERVICE_BEAN = "translationService";
     public static final String LANGUAGE_DETECTION_SERVICE_BEAN = "languageDetectionService";
 
+    public static final String EXECUTION_STEPS_BEAN = "executionSteps";
+
 
     public static final String PP_SYNC_TASK_EXECUTOR = "postPublicationTaskExecutor";
     public static final String PP_SYNC_TASK_SCHEDULAR = "postPublicationSyncTaskScheduler";
