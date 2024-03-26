@@ -5,8 +5,11 @@ import com.mongodb.client.MongoClients;
 import dev.morphia.Datastore;
 import eu.europeana.batch.entity.JobExecutionEntity;
 import eu.europeana.corelib.solr.bean.impl.FullBeanImpl;
+import eu.europeana.indexing.exception.SetupRelatedIndexingException;
+import eu.europeana.indexing.solr.SolrIndexingSettings;
 import eu.europeana.indexing.utils.TriConsumer;
 import eu.europeana.metis.mongo.dao.RecordDao;
+import eu.europeana.metis.solr.connection.SolrProperties;
 import eu.europeana.postpublication.batch.model.ExecutionStep;
 import eu.europeana.postpublication.translation.service.LanguageDetectionService;
 import eu.europeana.postpublication.translation.service.pangeanic.PangeanicV2LangDetectService;
@@ -16,10 +19,13 @@ import eu.europeana.postpublication.utils.AppConstants;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -85,6 +91,33 @@ public class PostPublicationDataConfig {
     @Bean(name = AppConstants.FULL_BEAN_PRE_PROCESSOR)
     public TriConsumer fullBeanPreprocessor() {
         return EMPTY_PREPROCESSOR;
+    }
+
+
+    // solr indexing beans
+
+    /**
+     * Solr properties solr properties.
+     *
+     * @return the solr properties
+     * @throws URISyntaxException the uri syntax exception
+     * @throws SetupRelatedIndexingException the setup related indexing exception
+     */
+    @Bean
+    SolrProperties<SetupRelatedIndexingException> solrProperties() throws SetupRelatedIndexingException {
+        try {
+            logger.info("Configuring the solr properties for indexing - {}" , settings.getSolrUrl());
+            SolrProperties<SetupRelatedIndexingException> solrProperties = new SolrProperties<>(SetupRelatedIndexingException::new);
+            solrProperties.addSolrHost(new URI(settings.getSolrUrl()));
+            return solrProperties;
+        } catch (URISyntaxException e) {
+            throw new SetupRelatedIndexingException("Invalid solr host !!!");
+        }
+    }
+
+    @Bean(name = AppConstants.SOLR_INDEXING_SETTING_BEAN)
+    public SolrIndexingSettings solrIndexingSettings() throws SetupRelatedIndexingException {
+        return new SolrIndexingSettings(solrProperties());
     }
 
 

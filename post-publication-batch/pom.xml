@@ -54,13 +54,7 @@
         <dependency>
             <groupId>eu.europeana.metis</groupId>
             <artifactId>metis-indexing</artifactId>
-            <version>${metis.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>eu.europeana.metis</groupId>
-                    <artifactId>metis-common-solr</artifactId>
-                </exclusion>
-            </exclusions>
+            <version>${metis.framework.version}</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/dev.morphia.morphia/core -->
         <dependency>

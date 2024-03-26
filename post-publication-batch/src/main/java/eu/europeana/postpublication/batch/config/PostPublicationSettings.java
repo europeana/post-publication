@@ -33,6 +33,9 @@ public class PostPublicationSettings implements InitializingBean {
     @Value("${mongo.max.idle.time.millisec: 10000}")
     private long mongoMaxIdleTimeMillisec;
 
+    @Value("${solr.url}")
+    private String solrUrl;
+
     @Value("${batch.step.chunkSize: 100}")
     private int batchChunkSize;
 
@@ -60,6 +63,9 @@ public class PostPublicationSettings implements InitializingBean {
     @Value("${pp.intervalSeconds}")
     private int ppSyncInterval;
 
+    public String getSolrUrl() {
+        return solrUrl;
+    }
 
     @Value("${process.datasets}")
     private String datasetsToProcess;

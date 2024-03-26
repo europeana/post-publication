@@ -7,7 +7,7 @@ import eu.europeana.postpublication.batch.config.PostPublicationSettings;
 import eu.europeana.postpublication.batch.model.PostPublicationFailedMetadata;
 import eu.europeana.postpublication.batch.utils.BatchUtils;
 import eu.europeana.postpublication.service.BatchRecordService;
-import eu.europeana.postpublication.service.FullBeanPublisher;
+import eu.europeana.postpublication.service.FullBeanMongoPublisher;
 import eu.europeana.postpublication.utils.AppConstants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,10 +27,10 @@ public class PostPublicationFailedRecordsRepo {
 
     private final Datastore datastore;
     private final BatchRecordService batchRecordService;
-    private final FullBeanPublisher publisher;
+    private final FullBeanMongoPublisher publisher;
     private final PostPublicationSettings settings;
 
-    public PostPublicationFailedRecordsRepo(@Qualifier(AppConstants.BEAN_WRITER_DATA_STORE) Datastore datastore, BatchRecordService batchRecordService, FullBeanPublisher publisher, PostPublicationSettings settings) {
+    public PostPublicationFailedRecordsRepo(@Qualifier(AppConstants.BEAN_WRITER_DATA_STORE) Datastore datastore, BatchRecordService batchRecordService, FullBeanMongoPublisher publisher, PostPublicationSettings settings) {
         this.datastore = datastore;
         this.batchRecordService = batchRecordService;
         this.publisher = publisher;

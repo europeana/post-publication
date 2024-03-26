@@ -12,6 +12,7 @@ import eu.europeana.postpublication.batch.repository.PostPublicationJobMetadataR
 import eu.europeana.postpublication.batch.utils.BatchUtils;
 import eu.europeana.postpublication.batch.writer.RecordWriter;
 import eu.europeana.postpublication.batch.config.PostPublicationSettings;
+import eu.europeana.postpublication.batch.writer.SolrWriter;
 import eu.europeana.postpublication.exception.MongoConnnectionException;
 import eu.europeana.postpublication.utils.AppConstants;
 import org.springframework.batch.core.ItemProcessListener;
@@ -46,6 +47,7 @@ public class PostPublicationJobConfig {
 
     private final RecordProcessor recordProcessor;
     private final RecordWriter recordWriter;
+    private final SolrWriter solrWriter;
     private final PostPublicationSettings postPublicationSettings;
     private final PostPublicationUpdateListener postPublicationUpdateListener;
 
@@ -61,14 +63,15 @@ public class PostPublicationJobConfig {
 
 
     public PostPublicationJobConfig(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory, RecordProcessor recordProcessor,
-                                    RecordWriter recordWriter, PostPublicationSettings postPublicationSettings, PostPublicationUpdateListener postPublicationUpdateListener, ItemReaderConfig itemReaderConfig,
+                                    RecordWriter recordWriter, SolrWriter solrWriter, PostPublicationSettings postPublicationSettings, PostPublicationUpdateListener postPublicationUpdateListener, ItemReaderConfig itemReaderConfig,
                                     BatchSyncStats stats, PostPublicationJobMetadataRepo postPublicationJobMetaRepository, PostPublicationFailedRecordsRepo postPublicationFailedRecordsRepository,
                                     @Qualifier(AppConstants.PP_SYNC_TASK_EXECUTOR) TaskExecutor postPublicationTaskExecutor,
-                                    @Qualifier(AppConstants.EXECUTION_STEPS_BEAN)List<ExecutionStep> stepsToExecute) {
+                                    @Qualifier(AppConstants.EXECUTION_STEPS_BEAN) List<ExecutionStep> stepsToExecute) {
         this.jobBuilderFactory = jobBuilderFactory;
         this.stepBuilderFactory = stepBuilderFactory;
         this.recordProcessor = recordProcessor;
         this.recordWriter = recordWriter;
+        this.solrWriter = solrWriter;
         this.postPublicationSettings = postPublicationSettings;
         this.postPublicationUpdateListener = postPublicationUpdateListener;
         this.itemReaderConfig = itemReaderConfig;
@@ -153,6 +156,7 @@ public class PostPublicationJobConfig {
                 .processor(stepsToExecute.contains(ExecutionStep.TRANSLATIONS) ? recordProcessor : null )
                 //.processor(recordProcessor)
                 .writer(recordWriter)
+                .writer(stepsToExecute.contains(ExecutionStep.INDEXING) ? solrWriter : null)
                 .listener((ItemProcessListener<? super FullBean, ? super FullBean>) postPublicationUpdateListener)
                 .faultTolerant()
                 .processorNonTransactional()
