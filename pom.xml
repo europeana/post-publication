@@ -41,7 +41,7 @@
     <description>Framework to process data after publication in Europeana</description>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <corelib.version>2.16.2</corelib.version>
