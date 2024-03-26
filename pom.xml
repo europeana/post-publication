@@ -41,11 +41,12 @@
     <description>Framework to process data after publication in Europeana</description>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <corelib.version>2.16.2</corelib.version>
-        <metis.version>8</metis.version>
+<!--        <metis.version>8</metis.version>-->
+        <metis.framework.version>11</metis.framework.version>
         <api.commons.version>0.3.17</api.commons.version>
         <httpclient.version>4.5.13</httpclient.version>
         <springbatch.mongo.version>1.0.3</springbatch.mongo.version>

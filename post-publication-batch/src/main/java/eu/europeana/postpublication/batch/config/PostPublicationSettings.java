@@ -33,6 +33,9 @@ public class PostPublicationSettings implements InitializingBean {
     @Value("${mongo.max.idle.time.millisec: 10000}")
     private long mongoMaxIdleTimeMillisec;
 
+    @Value("${solr.url}")
+    private String solrUrl;
+
     @Value("${batch.step.chunkSize: 100}")
     private int batchChunkSize;
 
@@ -60,9 +63,15 @@ public class PostPublicationSettings implements InitializingBean {
     @Value("${pp.intervalSeconds}")
     private int ppSyncInterval;
 
+    public String getSolrUrl() {
+        return solrUrl;
+    }
 
     @Value("${process.datasets}")
     private String datasetsToProcess;
+
+    @Value("${steps.to.execute}")
+    private String stepsToExecute;
 
     public boolean IsFrameworkEnabled() {
         return isFrameworkEnabled;
@@ -127,6 +136,13 @@ public class PostPublicationSettings implements InitializingBean {
     public List<String> getDatasetsToProcess() {
         if(StringUtils.isNotEmpty(datasetsToProcess)) {
             return new ArrayList<>(Arrays.asList(datasetsToProcess.split("\\s*,\\s*")));
+        }
+        return new ArrayList<>();
+    }
+
+    public List<String> getStepsToExecute() {
+        if(StringUtils.isNotEmpty(stepsToExecute)) {
+            return new ArrayList<>(Arrays.asList(stepsToExecute.split("\\s*,\\s*")));
         }
         return new ArrayList<>();
     }
