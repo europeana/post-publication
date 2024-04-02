@@ -2,17 +2,13 @@ package eu.europeana.postpublication.batch;
 
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
 import eu.europeana.postpublication.batch.listener.PostPublicationUpdateListener;
-import eu.europeana.postpublication.batch.model.ExecutionStep;
 import eu.europeana.postpublication.batch.model.PostPublicationFailedMetadata;
 import eu.europeana.postpublication.batch.model.PostPublicationJobMetadata;
-import eu.europeana.postpublication.batch.processor.RecordProcessor;
 import eu.europeana.postpublication.batch.reader.ItemReaderConfig;
 import eu.europeana.postpublication.batch.repository.PostPublicationFailedRecordsRepo;
 import eu.europeana.postpublication.batch.repository.PostPublicationJobMetadataRepo;
 import eu.europeana.postpublication.batch.utils.BatchUtils;
-import eu.europeana.postpublication.batch.writer.RecordWriter;
 import eu.europeana.postpublication.batch.config.PostPublicationSettings;
-import eu.europeana.postpublication.batch.writer.SolrWriter;
 import eu.europeana.postpublication.exception.MongoConnnectionException;
 import eu.europeana.postpublication.utils.AppConstants;
 import org.springframework.batch.core.ItemProcessListener;
@@ -22,6 +18,7 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.task.TaskExecutor;
@@ -44,42 +41,31 @@ public class PostPublicationJobConfig {
 
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
-
-    private final RecordProcessor recordProcessor;
-    private final RecordWriter recordWriter;
-    private final SolrWriter solrWriter;
     private final PostPublicationSettings postPublicationSettings;
     private final PostPublicationUpdateListener postPublicationUpdateListener;
-
+    private final AbstractPipeline pipeline;
     private final ItemReaderConfig itemReaderConfig;
     private final BatchSyncStats stats;
-
     private final PostPublicationJobMetadataRepo postPublicationJobMetaRepository;
     private final PostPublicationFailedRecordsRepo postPublicationFailedRecordsRepository;
 
     private final TaskExecutor postPublicationTaskExecutor;
 
-    private final List<ExecutionStep> stepsToExecute;
-
-
-    public PostPublicationJobConfig(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory, RecordProcessor recordProcessor,
-                                    RecordWriter recordWriter, SolrWriter solrWriter, PostPublicationSettings postPublicationSettings, PostPublicationUpdateListener postPublicationUpdateListener, ItemReaderConfig itemReaderConfig,
+    public PostPublicationJobConfig(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory,
+                                    PostPublicationSettings postPublicationSettings, PostPublicationUpdateListener postPublicationUpdateListener,
+                                    AbstractPipeline pipeline, ItemReaderConfig itemReaderConfig,
                                     BatchSyncStats stats, PostPublicationJobMetadataRepo postPublicationJobMetaRepository, PostPublicationFailedRecordsRepo postPublicationFailedRecordsRepository,
-                                    @Qualifier(AppConstants.PP_SYNC_TASK_EXECUTOR) TaskExecutor postPublicationTaskExecutor,
-                                    @Qualifier(AppConstants.EXECUTION_STEPS_BEAN) List<ExecutionStep> stepsToExecute) {
+                                    @Qualifier(AppConstants.PP_SYNC_TASK_EXECUTOR) TaskExecutor postPublicationTaskExecutor) {
         this.jobBuilderFactory = jobBuilderFactory;
         this.stepBuilderFactory = stepBuilderFactory;
-        this.recordProcessor = recordProcessor;
-        this.recordWriter = recordWriter;
-        this.solrWriter = solrWriter;
         this.postPublicationSettings = postPublicationSettings;
         this.postPublicationUpdateListener = postPublicationUpdateListener;
+        this.pipeline = pipeline;
         this.itemReaderConfig = itemReaderConfig;
         this.stats = stats;
         this.postPublicationJobMetaRepository = postPublicationJobMetaRepository;
         this.postPublicationFailedRecordsRepository = postPublicationFailedRecordsRepository;
         this.postPublicationTaskExecutor = postPublicationTaskExecutor;
-        this.stepsToExecute = stepsToExecute;
     }
 
 
@@ -153,10 +139,12 @@ public class PostPublicationJobConfig {
                 .get("migrateRecordsStep")
                 .<FullBean, FullBean>chunk(postPublicationSettings.getBatchChunkSize())
                 .reader(itemReaderConfig.createRecordReader(start, datasetsToProcess, recordsToProcess))
-                .processor(stepsToExecute.contains(ExecutionStep.TRANSLATIONS) ? recordProcessor : null )
+                //.processor(stepsToExecute.contains(ExecutionStep.TRANSLATIONS) ? recordProcessor : null )
+                .processor(pipeline.getItemProcessor())
                 //.processor(recordProcessor)
-                .writer(recordWriter)
-                .writer(stepsToExecute.contains(ExecutionStep.INDEXING) ? solrWriter : null)
+                //.writer(recordWriter)
+               // .writer(stepsToExecute.contains(ExecutionStep.INDEXING) ? solrWriter : null)
+                .writer(pipeline.getItemWriter())
                 .listener((ItemProcessListener<? super FullBean, ? super FullBean>) postPublicationUpdateListener)
                 .faultTolerant()
                 .processorNonTransactional()

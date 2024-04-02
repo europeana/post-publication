@@ -1,6 +1,5 @@
 package eu.europeana.postpublication.batch.config;
 
-import com.mongodb.MongoClient;
 import com.mongodb.client.MongoClients;
 import dev.morphia.Datastore;
 import eu.europeana.batch.entity.JobExecutionEntity;
@@ -10,7 +9,12 @@ import eu.europeana.indexing.solr.SolrIndexingSettings;
 import eu.europeana.indexing.utils.TriConsumer;
 import eu.europeana.metis.mongo.dao.RecordDao;
 import eu.europeana.metis.solr.connection.SolrProperties;
+import eu.europeana.postpublication.batch.AbstractPipeline;
 import eu.europeana.postpublication.batch.model.ExecutionStep;
+import eu.europeana.postpublication.batch.pipelines.DebiasPipeline;
+import eu.europeana.postpublication.batch.pipelines.IndexingPipeline;
+import eu.europeana.postpublication.batch.pipelines.TranslationPipeline;
+import eu.europeana.postpublication.exception.InvalidExecutionStep;
 import eu.europeana.postpublication.translation.service.LanguageDetectionService;
 import eu.europeana.postpublication.translation.service.pangeanic.PangeanicV2LangDetectService;
 import eu.europeana.postpublication.translation.service.pangeanic.PangeanicV2TranslationService;
@@ -19,7 +23,8 @@ import eu.europeana.postpublication.utils.AppConstants;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -40,6 +45,14 @@ public class PostPublicationDataConfig {
     private static final TriConsumer<FullBeanImpl, FullBeanImpl, Pair<Date, Date>> EMPTY_PREPROCESSOR = (created, updated, recordDateAndCreationDate) -> {
     };
 
+    @Qualifier("translation")
+    private TranslationPipeline translationPipeline;
+
+    @Qualifier("indexing")
+    private IndexingPipeline indexingPipeline;
+
+    @Qualifier("debias")
+    private DebiasPipeline debiasPipeline;
 
     public PostPublicationDataConfig(PostPublicationSettings settings) {
         this.settings = settings;
@@ -148,15 +161,30 @@ public class PostPublicationDataConfig {
      * @return list of steps to be exceuted
      */
     @Bean(name = AppConstants.EXECUTION_STEPS_BEAN)
-    public List<ExecutionStep> getExecutionSteps() {
-        List<ExecutionStep> executionSteps = new ArrayList<>();
-        for (String value: settings.getStepsToExecute()) {
-            ExecutionStep step = ExecutionStep.getStep(value);
-            if(step != null) {
-                executionSteps.add(step);
-            }
+    public ExecutionStep getExecutionSteps() throws InvalidExecutionStep {
+        ExecutionStep step = ExecutionStep.getStep(settings.getStepToExecute());
+        if (step != null) {
+            logger.info("Configured step for execution: {}", step);
+            return step;
         }
-        logger.info("Configured steps for execution: {}", executionSteps);
-        return executionSteps;
+        throw new InvalidExecutionStep("Invalid execution step configured - " + settings.getStepToExecute());
+    }
+
+
+    @Primary
+    @Bean
+    public AbstractPipeline getPipeline() throws InvalidExecutionStep {
+        ExecutionStep step = getExecutionSteps();
+        if(step.equals(ExecutionStep.TRANSLATIONS)) {
+            return translationPipeline;
+        }
+        if(step.equals(ExecutionStep.DEBIAS)) {
+            return debiasPipeline;
+        }
+        if (step.equals(ExecutionStep.INDEXING)) {
+            return indexingPipeline;
+        }
+        return translationPipeline;
+
     }
 }

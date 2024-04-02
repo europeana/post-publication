@@ -70,8 +70,8 @@ public class PostPublicationSettings implements InitializingBean {
     @Value("${process.datasets}")
     private String datasetsToProcess;
 
-    @Value("${steps.to.execute}")
-    private String stepsToExecute;
+    @Value("${step.to.execute}")
+    private String stepToExecute;
 
     public boolean IsFrameworkEnabled() {
         return isFrameworkEnabled;
@@ -140,11 +140,8 @@ public class PostPublicationSettings implements InitializingBean {
         return new ArrayList<>();
     }
 
-    public List<String> getStepsToExecute() {
-        if(StringUtils.isNotEmpty(stepsToExecute)) {
-            return new ArrayList<>(Arrays.asList(stepsToExecute.split("\\s*,\\s*")));
-        }
-        return new ArrayList<>();
+    public String getStepToExecute() {
+        return stepToExecute;
     }
 
     private void validateRequiredSettings() {
