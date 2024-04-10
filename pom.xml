@@ -4,6 +4,7 @@
     <modules>
         <module>post-publication-batch</module>
         <module>post-publication-translation</module>
+        <module>post-publication-debias</module>
     </modules>
 
     <parent>
@@ -48,11 +49,13 @@
         <metis.version>8</metis.version>
         <api.commons.version>0.3.17</api.commons.version>
         <httpclient.version>4.5.13</httpclient.version>
+        <httpclient5.version>5.3</httpclient5.version>
         <springbatch.mongo.version>1.0.3</springbatch.mongo.version>
         <spring-boot.version>2.5.5</spring-boot.version>
         <git-commit-id.version>5.0.0</git-commit-id.version>
         <springdoc.version>1.6.13</springdoc.version>
         <snappy.version>1.1.8.4</snappy.version>
+        <annotation.api.version>0.5.1-SNAPSHOT</annotation.api.version>
     </properties>
 
     <dependencyManagement>
