@@ -9,7 +9,6 @@ import eu.europeana.indexing.solr.SolrIndexingSettings;
 import eu.europeana.indexing.utils.TriConsumer;
 import eu.europeana.metis.mongo.dao.RecordDao;
 import eu.europeana.metis.solr.connection.SolrProperties;
-import eu.europeana.postpublication.batch.AbstractPipeline;
 import eu.europeana.postpublication.batch.model.ExecutionStep;
 import eu.europeana.postpublication.batch.pipelines.DebiasPipeline;
 import eu.europeana.postpublication.batch.pipelines.IndexingPipeline;
@@ -23,7 +22,6 @@ import eu.europeana.postpublication.utils.AppConstants;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,9 +29,7 @@ import org.springframework.context.annotation.Primary;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 @Configuration
 public class PostPublicationDataConfig {
@@ -44,15 +40,6 @@ public class PostPublicationDataConfig {
 
     private static final TriConsumer<FullBeanImpl, FullBeanImpl, Pair<Date, Date>> EMPTY_PREPROCESSOR = (created, updated, recordDateAndCreationDate) -> {
     };
-
-    @Qualifier("translation")
-    private TranslationPipeline translationPipeline;
-
-    @Qualifier("indexing")
-    private IndexingPipeline indexingPipeline;
-
-    @Qualifier("debias")
-    private DebiasPipeline debiasPipeline;
 
     public PostPublicationDataConfig(PostPublicationSettings settings) {
         this.settings = settings;
@@ -168,23 +155,5 @@ public class PostPublicationDataConfig {
             return step;
         }
         throw new InvalidExecutionStep("Invalid execution step configured - " + settings.getStepToExecute());
-    }
-
-
-    @Primary
-    @Bean
-    public AbstractPipeline getPipeline() throws InvalidExecutionStep {
-        ExecutionStep step = getExecutionSteps();
-        if(step.equals(ExecutionStep.TRANSLATIONS)) {
-            return translationPipeline;
-        }
-        if(step.equals(ExecutionStep.DEBIAS)) {
-            return debiasPipeline;
-        }
-        if (step.equals(ExecutionStep.INDEXING)) {
-            return indexingPipeline;
-        }
-        return translationPipeline;
-
     }
 }

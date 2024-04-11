@@ -12,9 +12,9 @@ import static eu.europeana.postpublication.batch.utils.BatchUtils.getRecordIds;
 import java.util.List;
 
 @Component
-public class PostPublicationUpdateListener extends ItemListenerSupport<FullBean, FullBean> {
+public class RecordUpdateListener extends ItemListenerSupport<FullBean, FullBean> {
 
-    private static final Logger logger = LogManager.getLogger(PostPublicationUpdateListener.class);
+    private static final Logger logger = LogManager.getLogger(RecordUpdateListener.class);
 
     @Override
     public void onReadError(@NonNull Exception e) {

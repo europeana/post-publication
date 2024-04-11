@@ -2,7 +2,7 @@ package eu.europeana.postpublication.batch.repository;
 
 import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
-import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.filters.Filters;
 import eu.europeana.postpublication.batch.config.PostPublicationSettings;
 import eu.europeana.postpublication.batch.model.PostPublicationFailedMetadata;
 import eu.europeana.postpublication.batch.utils.BatchUtils;

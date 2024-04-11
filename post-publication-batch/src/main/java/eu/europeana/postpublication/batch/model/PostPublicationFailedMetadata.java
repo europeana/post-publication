@@ -14,6 +14,16 @@ public class PostPublicationFailedMetadata {
     @Id
     private ObjectId dbId;
 
+    String executionStep;
+
+    public String getExecutionStep() {
+        return executionStep;
+    }
+
+    public void setExecutionStep(String executionStep) {
+        this.executionStep = executionStep;
+    }
+
     Map<String, List<String>> failedRecords = new HashMap<>();
 
     boolean processed; // be default false

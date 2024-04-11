@@ -1,13 +1,13 @@
 package eu.europeana.postpublication.batch.reader;
 
-import dev.morphia.query.experimental.filters.Filter;
-import dev.morphia.query.experimental.filters.Filters;
-import dev.morphia.query.experimental.filters.RegexFilter;
+import dev.morphia.query.filters.Filter;
+import dev.morphia.query.filters.Filters;
+import dev.morphia.query.filters.RegexFilter;
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
 import eu.europeana.postpublication.batch.config.PostPublicationSettings;
 import eu.europeana.postpublication.service.BatchRecordService;
 import static eu.europeana.postpublication.utils.AppConstants.ABOUT;
-import static eu.europeana.postpublication.utils.AppConstants.TIMESTAMP_UPDATED;
+
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.batch.item.support.SynchronizedItemStreamReader;
 import org.springframework.context.annotation.Configuration;
@@ -36,7 +36,7 @@ public class ItemReaderConfig {
      * @param datasetToProcess
      * @return
      */
-    public SynchronizedItemStreamReader<FullBean> createRecordReader(Instant currentStartTime, List<String> datasetToProcess, List<String> recordsToProcess) {
+    public SynchronizedItemStreamReader<FullBean> createRecordReader(Instant currentStartTime, List<String> datasetToProcess, List<String> recordsToProcess, List<String> fieldsToFetch) {
         List<Filter> filters = new ArrayList<>();
         List<Filter> orFilters = new ArrayList<>();
 
@@ -64,7 +64,7 @@ public class ItemReaderConfig {
             RecordDatabaseReader reader =
                     new RecordDatabaseReader(
                             batchRecordService, postPublicationSettings.getBatchChunkSize(),
-                            filters.toArray(new Filter[0]));
+                            fieldsToFetch, filters.toArray(new Filter[0]));
             return threadSafeReader(reader);
 
     }
