@@ -1,15 +1,14 @@
 package eu.europeana.postpublication.batch;
 
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
-import eu.europeana.postpublication.batch.listener.PostPublicationUpdateListener;
+import eu.europeana.postpublication.batch.listener.RecordUpdateListener;
+import eu.europeana.postpublication.batch.model.ExecutionStep;
 import eu.europeana.postpublication.batch.model.PostPublicationFailedMetadata;
 import eu.europeana.postpublication.batch.model.PostPublicationJobMetadata;
-import eu.europeana.postpublication.batch.processor.RecordProcessor;
 import eu.europeana.postpublication.batch.reader.ItemReaderConfig;
 import eu.europeana.postpublication.batch.repository.PostPublicationFailedRecordsRepo;
 import eu.europeana.postpublication.batch.repository.PostPublicationJobMetadataRepo;
 import eu.europeana.postpublication.batch.utils.BatchUtils;
-import eu.europeana.postpublication.batch.writer.RecordWriter;
 import eu.europeana.postpublication.batch.config.PostPublicationSettings;
 import eu.europeana.postpublication.exception.MongoConnnectionException;
 import eu.europeana.postpublication.utils.AppConstants;
@@ -42,30 +41,26 @@ public class PostPublicationJobConfig {
 
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
-
-    private final RecordProcessor recordProcessor;
-    private final RecordWriter recordWriter;
     private final PostPublicationSettings postPublicationSettings;
-    private final PostPublicationUpdateListener postPublicationUpdateListener;
-
+    private final PipelineRegistryHandler pipelineRegistryHandler;
+    private final ExecutionStep executionStep;
     private final ItemReaderConfig itemReaderConfig;
     private final BatchSyncStats stats;
-
     private final PostPublicationJobMetadataRepo postPublicationJobMetaRepository;
     private final PostPublicationFailedRecordsRepo postPublicationFailedRecordsRepository;
-
     private final TaskExecutor postPublicationTaskExecutor;
 
-
-    public PostPublicationJobConfig(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory, RecordProcessor recordProcessor,
-                                    RecordWriter recordWriter, PostPublicationSettings postPublicationSettings, PostPublicationUpdateListener postPublicationUpdateListener, ItemReaderConfig itemReaderConfig,
-                                    BatchSyncStats stats, PostPublicationJobMetadataRepo postPublicationJobMetaRepository, PostPublicationFailedRecordsRepo postPublicationFailedRecordsRepository, @Qualifier(AppConstants.PP_SYNC_TASK_EXECUTOR) TaskExecutor postPublicationTaskExecutor) {
+    public PostPublicationJobConfig(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory,
+                                    PostPublicationSettings postPublicationSettings,
+                                    PipelineRegistryHandler pipelineRegistryHandler, @Qualifier(AppConstants.EXECUTION_STEPS_BEAN) ExecutionStep executionStep,
+                                    ItemReaderConfig itemReaderConfig,
+                                    BatchSyncStats stats, PostPublicationJobMetadataRepo postPublicationJobMetaRepository, PostPublicationFailedRecordsRepo postPublicationFailedRecordsRepository,
+                                    @Qualifier(AppConstants.PP_SYNC_TASK_EXECUTOR) TaskExecutor postPublicationTaskExecutor) {
         this.jobBuilderFactory = jobBuilderFactory;
         this.stepBuilderFactory = stepBuilderFactory;
-        this.recordProcessor = recordProcessor;
-        this.recordWriter = recordWriter;
         this.postPublicationSettings = postPublicationSettings;
-        this.postPublicationUpdateListener = postPublicationUpdateListener;
+        this.pipelineRegistryHandler = pipelineRegistryHandler;
+        this.executionStep = executionStep;
         this.itemReaderConfig = itemReaderConfig;
         this.stats = stats;
         this.postPublicationJobMetaRepository = postPublicationJobMetaRepository;
@@ -96,6 +91,8 @@ public class PostPublicationJobConfig {
         jobMetadata.setLastSuccessfulStartTime(startTime);
         List<String> datasetsToProcess = postPublicationSettings.getDatasetsToProcess();
 
+        List<String> fieldsToFetch = pipelineRegistryHandler.get(executionStep).getFieldsToFetchFromReader();
+
         // add the failed sets and records for processing
         List<String> recordsToProcess = new ArrayList<>();
         PostPublicationFailedMetadata failedMetadata = postPublicationFailedRecordsRepository.getPostPublicationFailedMetadata(); // get the one which is not processed
@@ -108,21 +105,28 @@ public class PostPublicationJobConfig {
 
         if (logger.isInfoEnabled()) {
             logger.info(
-                    "Starting post publication pipeline job. Fetching Records update after {}",
-                    from);
+                    "Starting post publication pipeline job. Fetching datasets - {} , records - {} ",
+                    datasetsToProcess, recordsToProcess);
         }
 
         return this.jobBuilderFactory
                 .get(POST_PUBLICATION_PIPELINE)
                 .start(initStats(stats, startTime))
-                .next(migrateRecordsStep(from, datasetsToProcess, recordsToProcess))
+                .next(executePipeline(from, datasetsToProcess, recordsToProcess, fieldsToFetch))
                 .next(finishStats(stats, startTime))
                 .next(updatePostPublicationJobMetadata(jobMetadata))
                 .next(updatePostPublicationJobFailedMetadata(failedMetadata))
                 .build();
     }
 
+
     /**
+     *
+     * Depending on the Execution step in the property file - pipeline is exceuted with the specific processor, writer and listeners
+     *
+     * Please look the #PipelineRegistryHandler to see the various pipelines configured
+     * For now supported ones are - Translations, Debias and Indexing (still work in progress)
+     *
      *  Few Points :
      *
      *  #processorNonTransactional :: Have marked the item processor as non-transactional (default is the opposite).
@@ -133,14 +137,14 @@ public class PostPublicationJobConfig {
      * @param start
      * @return
      */
-    private Step migrateRecordsStep(Instant start, List<String> datasetsToProcess, List<String> recordsToProcess) {
+    private Step executePipeline(Instant start, List<String> datasetsToProcess, List<String> recordsToProcess, List<String> fieldsToFetch) {
         return this.stepBuilderFactory
-                .get("migrateRecordsStep")
+                .get("executePipeline")
                 .<FullBean, FullBean>chunk(postPublicationSettings.getBatchChunkSize())
-                .reader(itemReaderConfig.createRecordReader(start, datasetsToProcess, recordsToProcess))
-                .processor(recordProcessor)
-                .writer(recordWriter)
-                .listener((ItemProcessListener<? super FullBean, ? super FullBean>) postPublicationUpdateListener)
+                .reader(itemReaderConfig.createRecordReader(start, datasetsToProcess, recordsToProcess, fieldsToFetch))
+                .processor(pipelineRegistryHandler.get(executionStep).getItemProcessor())
+                .writer(pipelineRegistryHandler.get(executionStep).getItemWriter())
+                .listener(pipelineRegistryHandler.get(executionStep).getItemProcessListener())
                 .faultTolerant()
                 .processorNonTransactional()
                 .retryLimit(postPublicationSettings.getRetryLimit())

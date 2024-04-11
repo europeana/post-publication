@@ -13,8 +13,11 @@ public class AppConstants {
     public static final String BEAN_WRITER_DATA_STORE = "recordDaoDatastore";
 
     public static final String FULL_BEAN_PRE_PROCESSOR = "fullBeanPreprocessor";
+    public static final String SOLR_INDEXING_SETTING_BEAN = "solrIndexingSettings";
     public static final String TRANSLATION_SERVICE_BEAN = "translationService";
     public static final String LANGUAGE_DETECTION_SERVICE_BEAN = "languageDetectionService";
+
+    public static final String EXECUTION_STEPS_BEAN = "executionSteps";
 
 
     public static final String PP_SYNC_TASK_EXECUTOR = "postPublicationTaskExecutor";

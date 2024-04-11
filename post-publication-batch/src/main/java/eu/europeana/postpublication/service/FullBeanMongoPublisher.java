@@ -5,7 +5,7 @@ import com.mongodb.MongoSocketException;
 import com.mongodb.MongoTimeoutException;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.filters.Filters;
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
 import eu.europeana.corelib.solr.bean.impl.FullBeanImpl;
 import eu.europeana.indexing.mongo.FullBeanUpdater;
@@ -26,7 +26,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Component;
 
 @Component
-public class FullBeanPublisher extends FullBeanUpdater {
+public class FullBeanMongoPublisher extends FullBeanUpdater {
 
     @Qualifier(AppConstants.RECORD_DAO)
     private final RecordDao edmMongoClient;
@@ -35,7 +35,7 @@ public class FullBeanPublisher extends FullBeanUpdater {
     private final TriConsumer<FullBeanImpl, FullBeanImpl, Pair<Date, Date>> fullBeanPreprocessor;
 
 
-    public FullBeanPublisher(RecordDao edmMongoClient, TriConsumer<FullBeanImpl, FullBeanImpl, Pair<Date, Date>> fullBeanPreprocessor) {
+    public FullBeanMongoPublisher(RecordDao edmMongoClient, TriConsumer<FullBeanImpl, FullBeanImpl, Pair<Date, Date>> fullBeanPreprocessor) {
         super(fullBeanPreprocessor);
         this.edmMongoClient = edmMongoClient;
         this.fullBeanPreprocessor = fullBeanPreprocessor;
@@ -47,7 +47,7 @@ public class FullBeanPublisher extends FullBeanUpdater {
      * @return
      * @throws MongoConnnectionException
      */
-    public List<String> publish(List<? extends FullBean> recordList) throws MongoConnnectionException {
+    public List<String> publishToMongo(List<? extends FullBean> recordList) throws MongoConnnectionException {
             List<String> recordUpdates = new ArrayList<>();
             try {
                 for (FullBean fullBean : recordList) {
