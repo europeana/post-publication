@@ -1,0 +1,104 @@
+package eu.europeana.postpublication.debias.service;
+
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import eu.europeana.postpublication.debias.exception.DebiasException;
+import eu.europeana.postpublication.debias.io.ContextSerializer;
+import eu.europeana.postpublication.debias.io.CustomHttpResponseHandler;
+import eu.europeana.postpublication.debias.model.Context;
+import eu.europeana.postpublication.debias.model.DebiasRequest;
+import eu.europeana.postpublication.debias.model.DebiasResponse;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.io.HttpClientResponseHandler;
+import org.apache.hc.core5.http.io.SocketConfig;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.util.Timeout;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+
+import javax.annotation.PostConstruct;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
+@PropertySource("classpath:post-publication.properties")
+@PropertySource(value = "classpath:post-publication.user.properties", ignoreResourceNotFound = true)
+public class DebiasService extends BaseService {
+
+    protected static final Logger LOG = LogManager.getLogger(DebiasService.class);
+
+    @Value("${debias.endpoint:}")
+    private String debiasEndpoint;
+
+    private CloseableHttpClient debiasClient;
+
+    /**
+     * Creates a new client that can send requests to debias client. Note that the client needs
+     * to be closed when it's not used anymore
+     */
+    @PostConstruct
+    private void init() {
+        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+        cm.setMaxTotal(MAX_CONNECTIONS);
+        cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
+        cm.setDefaultSocketConfig(SocketConfig.custom().setSoKeepAlive(true).setSoTimeout(Timeout.ofMilliseconds(3600000)).build());
+        debiasClient = HttpClients.custom().setConnectionManager(cm).build();
+        LOG.info("Debias service is initialized with Endpoint - {}", debiasEndpoint);
+
+        // initialise mapper
+        mapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(Context.class, ContextSerializer.INSTANCE);
+    }
+
+
+    public DebiasResponse getAnnotationsForBiasTerms(DebiasRequest request) throws DebiasException {
+        HttpPost post = createRequest(debiasEndpoint, request);
+        DebiasResponse response = sendRequestAndGetResponse(post);
+        return response;
+    }
+
+    public HttpPost createRequest(String debiasEndpoint, DebiasRequest request) throws DebiasException {
+        try (OutputStream stream = new ByteArrayOutputStream()) {
+            HttpPost post = new HttpPost(debiasEndpoint);
+            serialise(request, stream);
+            post.setEntity(new StringEntity(stream.toString()));
+
+            post.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+            post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Sending POST {}", debiasEndpoint);
+                LOG.trace("  body {}", request);
+                LOG.trace("  headers:");
+                for (Header header : post.getHeaders()) {
+                    LOG.trace("  {}: {}", header.getName(), header.getValue());
+                }
+            }
+            return post;
+        } catch (IOException e) {
+            throw new DebiasException(e.getMessage());
+        }
+    }
+
+    private DebiasResponse sendRequestAndGetResponse(HttpPost post) throws DebiasException {
+        try {
+            HttpClientResponseHandler<DebiasResponse> responseHandler = new CustomHttpResponseHandler();
+            DebiasResponse response = debiasClient.execute(post, responseHandler);
+            if (response == null) {
+                throw new DebiasException("Empty response from client");
+            }
+            return response;
+        } catch (IOException e) {
+            throw new DebiasException(e.getMessage()); // todo see if the message is propogated correctly from response handler
+        }
+    }
+}
