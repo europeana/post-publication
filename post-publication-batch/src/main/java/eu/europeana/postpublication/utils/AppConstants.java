@@ -17,6 +17,8 @@ public class AppConstants {
     public static final String TRANSLATION_SERVICE_BEAN = "translationService";
     public static final String LANGUAGE_DETECTION_SERVICE_BEAN = "languageDetectionService";
 
+    public static final String DEBIAS_SERVICE_BEAN = "debiasService";
+
     public static final String EXECUTION_STEPS_BEAN = "executionSteps";
 
 

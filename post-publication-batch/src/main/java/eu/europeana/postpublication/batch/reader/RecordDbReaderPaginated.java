@@ -7,23 +7,22 @@ import org.springframework.batch.item.ItemReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * {@link ItemReader} that reads documents from MongoDB via a paging technique.
  * @author srishti singh
  * */
 
-public class RecordDatabaseReader extends BaseDatabaseReader<FullBean> {
+public class RecordDbReaderPaginated extends BaseDatabaseReader<FullBean> {
 
-    private static final Logger logger = LogManager.getLogger(RecordDatabaseReader.class);
+    private static final Logger logger = LogManager.getLogger(RecordDbReaderPaginated.class);
 
     private final Filter[] queryFilters;
     private final List<String> projectionFields;
     private final BatchRecordService recordService;
 
-    public RecordDatabaseReader(BatchRecordService recordService, int pageSize, List<String> projectionFields, Filter... queryFilters) {
+    public RecordDbReaderPaginated(BatchRecordService recordService, int pageSize, List<String> projectionFields, Filter... queryFilters) {
         super(pageSize);
         this.recordService = recordService;
         this.projectionFields = projectionFields;
@@ -48,12 +47,11 @@ public class RecordDatabaseReader extends BaseDatabaseReader<FullBean> {
                     start,
                     pageSize);
         }
-
         return (Iterator<FullBean>) result.iterator();
     }
 
     @Override
     String getClassName() {
-        return RecordDatabaseReader.class.getSimpleName();
+        return RecordDbReaderPaginated.class.getSimpleName();
     }
 }

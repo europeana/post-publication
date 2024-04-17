@@ -4,9 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.cfg.ContextAttributes;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import eu.europeana.annotation.definitions.model.Annotation;
 import eu.europeana.annotation.definitions.model.vocabulary.MotivationTypes;
 import eu.europeana.annotation.utils.parse.AnnotationLdParser;
+import eu.europeana.postpublication.debias.io.ContextSerializer;
 import eu.europeana.postpublication.debias.model.Context;
 import eu.europeana.postpublication.debias.model.DebiasRequest;
 import eu.europeana.postpublication.debias.model.DebiasResponse;
@@ -17,7 +19,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
 
-public class BaseService {
+public abstract class BaseService {
 
     public static final int MAX_CONNECTIONS = 100;
     public static final int MAX_CONNECTIONS_PER_ROUTE = 100;
@@ -31,6 +33,15 @@ public class BaseService {
 
     protected ObjectMapper mapper;
     private AnnotationLdParser annotationLdParser = new AnnotationLdParser();
+
+    public BaseService() {
+        // initialise mapper
+        mapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(Context.class, ContextSerializer.INSTANCE);
+        mapper.registerModule(module);
+        mapper.findAndRegisterModules();
+    }
 
     /**
      * Serialise the debias request
@@ -77,4 +88,11 @@ public class BaseService {
 
     }
 
+    public ObjectMapper getMapper() {
+        return mapper;
+    }
+
+    public void setMapper(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
 }

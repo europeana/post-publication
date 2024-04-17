@@ -28,8 +28,8 @@ public class RecordProcessor implements ItemProcessor<FullBean, FullBean> {
 
     @Override
     public FullBean process(@NotNull FullBean bean) throws Exception {
-        bean = langDetectionService.detectLanguageForProxy(bean);
-        bean = translateFilterService.translateProxyFields(bean, Language.ENGLISH);
+//        bean = langDetectionService.detectLanguageForProxy(bean);
+//        bean = translateFilterService.translateProxyFields(bean, Language.ENGLISH);
 
         //update the timestamp for the bean after processing
        // bean.setTimestampUpdated(new Date());

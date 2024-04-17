@@ -1,22 +1,18 @@
 package eu.europeana.postpublication.debias.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonAppend;
+
 import java.util.List;
 
+@JsonAppend(prepend = true, attrs = { @JsonAppend.Attr(value = "@context") })
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class DebiasRequest {
 
-    private Context context;
     private String type ="Request";
     private Params params;
     private long totalItems;
-    private List<Items> items;
-
-    public Context getContext() {
-        return context;
-    }
-
-    public void setContext(Context context) {
-        this.context = context;
-    }
+    private List<Item> items;
 
     public String getType() {
         return type;
@@ -42,11 +38,11 @@ public class DebiasRequest {
         this.totalItems = totalItems;
     }
 
-    public List<Items> getItems() {
+    public List<Item> getItems() {
         return items;
     }
 
-    public void setItems(List<Items> items) {
+    public void setItems(List<Item> items) {
         this.items = items;
     }
 }

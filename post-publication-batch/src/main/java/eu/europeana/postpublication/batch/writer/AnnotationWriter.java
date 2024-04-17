@@ -14,5 +14,6 @@ public class AnnotationWriter implements ItemWriter<FullBean> {
     @Override
     public void write(List<? extends FullBean> list) throws Exception {
 
+        System .out.println("here writing");
     }
 }

@@ -1,12 +1,16 @@
 package eu.europeana.postpublication.batch.pipelines;
 
+import eu.europeana.corelib.definitions.edm.beans.FullBean;
 import eu.europeana.postpublication.batch.AbstractPipeline;
+import eu.europeana.postpublication.batch.listener.RecordUpdateListener;
 import eu.europeana.postpublication.batch.model.ExecutionStep;
 import eu.europeana.postpublication.batch.processor.AnnotationProcessor;
+import eu.europeana.postpublication.batch.reader.ItemReaderConfig;
 import eu.europeana.postpublication.batch.writer.AnnotationWriter;
 import org.springframework.batch.core.ItemProcessListener;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.support.SynchronizedItemStreamReader;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -20,9 +24,12 @@ public class DebiasPipeline implements AbstractPipeline {
 
     private final AnnotationProcessor annotationProcessor;
 
-    public DebiasPipeline(AnnotationWriter annotationWriter, AnnotationProcessor annotationProcessor) {
+    private final RecordUpdateListener listener;
+
+    public DebiasPipeline(AnnotationWriter annotationWriter, AnnotationProcessor annotationProcessor, RecordUpdateListener listener) {
         this.annotationWriter = annotationWriter;
         this.annotationProcessor = annotationProcessor;
+        this.listener = listener;
     }
 
     @Override
@@ -47,6 +54,6 @@ public class DebiasPipeline implements AbstractPipeline {
 
     @Override
     public ItemProcessListener getItemProcessListener() {
-        return null;
+        return listener;
     }
 }

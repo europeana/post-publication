@@ -1,6 +1,7 @@
 package eu.europeana.postpublication.debias.service;
 
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import eu.europeana.postpublication.debias.exception.DebiasException;
@@ -42,6 +43,18 @@ public class DebiasService extends BaseService {
     private CloseableHttpClient debiasClient;
 
     /**
+     * ONLY for testing
+     * @param debiasEndpoint
+     */
+    public void setDebiasEndpoint(String debiasEndpoint) {
+        this.debiasEndpoint = debiasEndpoint;
+    }
+
+    public void setDebiasClient(CloseableHttpClient debiasClient) {
+        this.debiasClient = debiasClient;
+    }
+
+    /**
      * Creates a new client that can send requests to debias client. Note that the client needs
      * to be closed when it's not used anymore
      */
@@ -53,13 +66,7 @@ public class DebiasService extends BaseService {
         cm.setDefaultSocketConfig(SocketConfig.custom().setSoKeepAlive(true).setSoTimeout(Timeout.ofMilliseconds(3600000)).build());
         debiasClient = HttpClients.custom().setConnectionManager(cm).build();
         LOG.info("Debias service is initialized with Endpoint - {}", debiasEndpoint);
-
-        // initialise mapper
-        mapper = new ObjectMapper();
-        SimpleModule module = new SimpleModule();
-        module.addSerializer(Context.class, ContextSerializer.INSTANCE);
     }
-
 
     public DebiasResponse getAnnotationsForBiasTerms(DebiasRequest request) throws DebiasException {
         HttpPost post = createRequest(debiasEndpoint, request);

@@ -10,9 +10,7 @@ import eu.europeana.indexing.utils.TriConsumer;
 import eu.europeana.metis.mongo.dao.RecordDao;
 import eu.europeana.metis.solr.connection.SolrProperties;
 import eu.europeana.postpublication.batch.model.ExecutionStep;
-import eu.europeana.postpublication.batch.pipelines.DebiasPipeline;
-import eu.europeana.postpublication.batch.pipelines.IndexingPipeline;
-import eu.europeana.postpublication.batch.pipelines.TranslationPipeline;
+import eu.europeana.postpublication.debias.service.DebiasService;
 import eu.europeana.postpublication.exception.InvalidExecutionStep;
 import eu.europeana.postpublication.translation.service.LanguageDetectionService;
 import eu.europeana.postpublication.translation.service.pangeanic.PangeanicV2LangDetectService;
@@ -22,7 +20,6 @@ import eu.europeana.postpublication.utils.AppConstants;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -148,12 +145,17 @@ public class PostPublicationDataConfig {
      * @return list of steps to be exceuted
      */
     @Bean(name = AppConstants.EXECUTION_STEPS_BEAN)
-    public ExecutionStep getExecutionSteps() throws InvalidExecutionStep {
+    public ExecutionStep getExecutionStep() throws InvalidExecutionStep {
         ExecutionStep step = ExecutionStep.getStep(settings.getStepToExecute());
         if (step != null) {
             logger.info("Configured step for execution: {}", step);
             return step;
         }
         throw new InvalidExecutionStep("Invalid execution step configured - " + settings.getStepToExecute());
+    }
+
+    @Bean(name = AppConstants.DEBIAS_SERVICE_BEAN)
+    public DebiasService getDebiasService() {
+        return new DebiasService();
     }
 }

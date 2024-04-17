@@ -1,7 +1,6 @@
 package eu.europeana.postpublication.batch;
 
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
-import eu.europeana.postpublication.batch.listener.RecordUpdateListener;
 import eu.europeana.postpublication.batch.model.ExecutionStep;
 import eu.europeana.postpublication.batch.model.PostPublicationFailedMetadata;
 import eu.europeana.postpublication.batch.model.PostPublicationJobMetadata;
@@ -12,12 +11,12 @@ import eu.europeana.postpublication.batch.utils.BatchUtils;
 import eu.europeana.postpublication.batch.config.PostPublicationSettings;
 import eu.europeana.postpublication.exception.MongoConnnectionException;
 import eu.europeana.postpublication.utils.AppConstants;
-import org.springframework.batch.core.ItemProcessListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.item.support.SynchronizedItemStreamReader;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -95,6 +94,8 @@ public class PostPublicationJobConfig {
 
         // add the failed sets and records for processing
         List<String> recordsToProcess = new ArrayList<>();
+
+        // todo optimise failed repo as well depdending on step
         PostPublicationFailedMetadata failedMetadata = postPublicationFailedRecordsRepository.getPostPublicationFailedMetadata(); // get the one which is not processed
         if (failedMetadata != null) {
             // if present datasets and records will be added for processing
@@ -114,11 +115,10 @@ public class PostPublicationJobConfig {
                 .start(initStats(stats, startTime))
                 .next(executePipeline(from, datasetsToProcess, recordsToProcess, fieldsToFetch))
                 .next(finishStats(stats, startTime))
-                .next(updatePostPublicationJobMetadata(jobMetadata))
-                .next(updatePostPublicationJobFailedMetadata(failedMetadata))
+//                .next(updatePostPublicationJobMetadata(jobMetadata))
+//                .next(updatePostPublicationJobFailedMetadata(failedMetadata))
                 .build();
     }
-
 
     /**
      *
@@ -138,10 +138,14 @@ public class PostPublicationJobConfig {
      * @return
      */
     private Step executePipeline(Instant start, List<String> datasetsToProcess, List<String> recordsToProcess, List<String> fieldsToFetch) {
+        SynchronizedItemStreamReader reader = executionStep.equals(ExecutionStep.DEBIAS)
+                ? itemReaderConfig.createItemReader(datasetsToProcess, fieldsToFetch)
+                : itemReaderConfig.createRecordReader(start, datasetsToProcess, recordsToProcess, fieldsToFetch);
+
         return this.stepBuilderFactory
                 .get("executePipeline")
-                .<FullBean, FullBean>chunk(postPublicationSettings.getBatchChunkSize())
-                .reader(itemReaderConfig.createRecordReader(start, datasetsToProcess, recordsToProcess, fieldsToFetch))
+                .chunk(postPublicationSettings.getBatchChunkSize())
+                .reader(reader)
                 .processor(pipelineRegistryHandler.get(executionStep).getItemProcessor())
                 .writer(pipelineRegistryHandler.get(executionStep).getItemWriter())
                 .listener(pipelineRegistryHandler.get(executionStep).getItemProcessListener())

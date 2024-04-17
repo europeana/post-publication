@@ -6,6 +6,12 @@ public class Params {
     private String language;
     private boolean provenance;
 
+    public Params(long limitPerPredicate, String language, boolean provenance) {
+        this.limitPerPredicate = limitPerPredicate;
+        this.language = language;
+        this.provenance = provenance;
+    }
+
     public long getLimitPerPredicate() {
         return limitPerPredicate;
     }

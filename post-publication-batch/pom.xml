@@ -43,6 +43,11 @@
         </dependency>
         <dependency>
             <groupId>eu.europeana.api</groupId>
+            <artifactId>post-publication-debias</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>eu.europeana.api</groupId>
             <artifactId>spring-batch-mongo</artifactId>
             <version>${springbatch.mongo.version}</version>
         </dependency>
