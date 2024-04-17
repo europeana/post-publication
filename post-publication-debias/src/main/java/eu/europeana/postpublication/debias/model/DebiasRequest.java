@@ -2,10 +2,11 @@ package eu.europeana.postpublication.debias.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonAppend;
+import eu.europeana.postpublication.debias.utils.SerialisationUtils;
 
 import java.util.List;
 
-@JsonAppend(prepend = true, attrs = { @JsonAppend.Attr(value = "@context") })
+@JsonAppend(prepend = true, attrs = { @JsonAppend.Attr(value = SerialisationUtils.context) })
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DebiasRequest {
 

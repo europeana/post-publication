@@ -23,23 +23,29 @@
             <version>${httpclient5.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-
 <!--        annotation-definitions is includen in utils-->
         <dependency>
             <groupId>eu.europeana.annotation</groupId>
             <artifactId>annotation-utils</artifactId>
             <version>${annotation.api.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
             <groupId>eu.europeana.api.commons</groupId>
             <artifactId>commons-error</artifactId>
             <version>${api.commons.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

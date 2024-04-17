@@ -1,15 +1,16 @@
 package eu.europeana.postpublication.debias.service;
 
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import eu.europeana.annotation.definitions.model.Annotation;
 import eu.europeana.postpublication.debias.exception.DebiasException;
 import eu.europeana.postpublication.debias.io.ContextSerializer;
 import eu.europeana.postpublication.debias.io.CustomHttpResponseHandler;
 import eu.europeana.postpublication.debias.model.Context;
 import eu.europeana.postpublication.debias.model.DebiasRequest;
 import eu.europeana.postpublication.debias.model.DebiasResponse;
+import eu.europeana.postpublication.debias.utils.SerialisationUtils;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -30,10 +31,11 @@ import javax.annotation.PostConstruct;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
 
 @PropertySource("classpath:post-publication.properties")
 @PropertySource(value = "classpath:post-publication.user.properties", ignoreResourceNotFound = true)
-public class DebiasService extends BaseService {
+public class DebiasService extends SerialisationUtils {
 
     protected static final Logger LOG = LogManager.getLogger(DebiasService.class);
 
@@ -42,16 +44,14 @@ public class DebiasService extends BaseService {
 
     private CloseableHttpClient debiasClient;
 
-    /**
-     * ONLY for testing
-     * @param debiasEndpoint
-     */
-    public void setDebiasEndpoint(String debiasEndpoint) {
-        this.debiasEndpoint = debiasEndpoint;
-    }
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    public void setDebiasClient(CloseableHttpClient debiasClient) {
-        this.debiasClient = debiasClient;
+    public DebiasService() {
+
+    }
+    public DebiasService (String debiasEndpoint) {
+        this.debiasEndpoint = debiasEndpoint;
+        init();
     }
 
     /**
@@ -66,18 +66,25 @@ public class DebiasService extends BaseService {
         cm.setDefaultSocketConfig(SocketConfig.custom().setSoKeepAlive(true).setSoTimeout(Timeout.ofMilliseconds(3600000)).build());
         debiasClient = HttpClients.custom().setConnectionManager(cm).build();
         LOG.info("Debias service is initialized with Endpoint - {}", debiasEndpoint);
+
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(Context.class, ContextSerializer.INSTANCE);
+        mapper.registerModule(module);
+        mapper.findAndRegisterModules();
+        LOG.info("Object mapper initialized ... ");
+
     }
 
-    public DebiasResponse getAnnotationsForBiasTerms(DebiasRequest request) throws DebiasException {
+    public List<Annotation> getAnnotationsForBiasTerms(DebiasRequest request) throws DebiasException {
         HttpPost post = createRequest(debiasEndpoint, request);
-        DebiasResponse response = sendRequestAndGetResponse(post);
+        List<Annotation> response = sendRequestAndGetResponse(post);
         return response;
     }
 
     public HttpPost createRequest(String debiasEndpoint, DebiasRequest request) throws DebiasException {
         try (OutputStream stream = new ByteArrayOutputStream()) {
             HttpPost post = new HttpPost(debiasEndpoint);
-            serialise(request, stream);
+            serialise(mapper, request, stream);
             post.setEntity(new StringEntity(stream.toString()));
 
             post.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
@@ -96,16 +103,16 @@ public class DebiasService extends BaseService {
         }
     }
 
-    private DebiasResponse sendRequestAndGetResponse(HttpPost post) throws DebiasException {
+    private List<Annotation> sendRequestAndGetResponse(HttpPost post) throws DebiasException {
         try {
-            HttpClientResponseHandler<DebiasResponse> responseHandler = new CustomHttpResponseHandler();
-            DebiasResponse response = debiasClient.execute(post, responseHandler);
+            HttpClientResponseHandler<List<Annotation>> responseHandler = new CustomHttpResponseHandler(mapper);
+            List<Annotation> response = debiasClient.execute(post, responseHandler);
             if (response == null) {
                 throw new DebiasException("Empty response from client");
             }
             return response;
         } catch (IOException e) {
-            throw new DebiasException(e.getMessage()); // todo see if the message is propogated correctly from response handler
+            throw new DebiasException(e.getMessage());
         }
     }
 }

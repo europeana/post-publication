@@ -6,12 +6,7 @@ public class PartOf {
 
     private String type ="AnnotationCollection";
     private long total;
-    private Instant modified;
-
-    public PartOf(long total, String modified) {
-        this.total = total;
-        this.modified = Instant.parse(modified);
-    }
+    private String modified;
 
     public String getType() {
         return type;
@@ -21,7 +16,15 @@ public class PartOf {
         return total;
     }
 
-    public Instant getModified() {
+    public String getModified() {
         return modified;
+    }
+
+    public void setTotal(long total) {
+        this.total = total;
+    }
+
+    public void setModified(String modified) {
+        this.modified = modified;
     }
 }

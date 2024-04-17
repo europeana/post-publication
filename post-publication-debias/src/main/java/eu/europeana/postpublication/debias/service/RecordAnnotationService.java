@@ -51,13 +51,10 @@ public class RecordAnnotationService {
             }
         }
 
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Gathered data - {}", itemsMap);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Gathered data for languages {} - {} ", itemsMap.keySet(), itemsMap);
         }
 
-        for (Map.Entry<String, List<Item>> entry : itemsMap.entrySet()) {
-            System.out.println(entry.getKey() + "/" + entry.getValue());
-        }
         // create Debias Requests for each language gathered
         for (Map.Entry<String, List<Item>> entry : itemsMap.entrySet()) {
             DebiasRequest request = new DebiasRequest();
@@ -66,13 +63,13 @@ public class RecordAnnotationService {
             request.setTotalItems(entry.getValue().size());
 
             // send request for each language
-            DebiasResponse response = debiasService.getAnnotationsForBiasTerms(request);
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("For language {} debias request, annotations received {}" , entry.getKey(), response.getItems().size());
+            List<Annotation> response = debiasService.getAnnotationsForBiasTerms(request);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("For language {} debias request, annotations received {}" , entry.getKey(), response.size());
             }
-            annotations.addAll(response.getItems());
+            annotations.addAll(response);
         }
-        LOG.debug("Time taken to processs {} bean {} ms- ", fullBeans.size(), (System.currentTimeMillis() - start));
+        LOG.debug("Time taken to process {} bean {} ms- ", fullBeans.size(), (System.currentTimeMillis() - start));
         return annotations;
     }
 

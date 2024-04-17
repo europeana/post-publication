@@ -8,4 +8,11 @@ public class Context {
     public String getURI()  { return "https://www.europeana.eu/schemas/context/edm.jsonld"; }
 
     public String getBase() { return base; }
+
+    @Override
+    public String toString() {
+        return "Context{" +
+                "base='" + base + '\'' +
+                '}';
+    }
 }
