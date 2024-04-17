@@ -19,19 +19,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import static eu.europeana.postpublication.debias.utils.AppConstants.ITEMS;
+import static eu.europeana.postpublication.debias.utils.AppConstants.context;
 
 public abstract class SerialisationUtils {
-
-    public static final int MAX_CONNECTIONS = 100;
-    public static final int MAX_CONNECTIONS_PER_ROUTE = 100;
-
-    public static final String context = "@context";
-    public static final String base = "@base";
-    public static final String PARTOF = "partOf";
-    public static final String TOTAL = "total";
-    public static final String MODIFIED = "modified";
-    public static final String ITEMS = "items";
-    public static final String TYPE = "type";
 
     private final AnnotationLdParser annotationLdParser = new AnnotationLdParser();
 

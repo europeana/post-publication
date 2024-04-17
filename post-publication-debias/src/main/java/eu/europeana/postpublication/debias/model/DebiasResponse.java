@@ -5,6 +5,7 @@ import eu.europeana.annotation.definitions.model.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO remove this class and related calss
 public class DebiasResponse {
 
     private Context context;

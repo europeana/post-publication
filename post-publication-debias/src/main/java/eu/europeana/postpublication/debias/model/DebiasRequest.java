@@ -2,15 +2,16 @@ package eu.europeana.postpublication.debias.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonAppend;
-import eu.europeana.postpublication.debias.utils.SerialisationUtils;
 
 import java.util.List;
+import static eu.europeana.postpublication.debias.utils.AppConstants.context;
+import static eu.europeana.postpublication.debias.utils.AppConstants.REQUEST;
 
-@JsonAppend(prepend = true, attrs = { @JsonAppend.Attr(value = SerialisationUtils.context) })
+@JsonAppend(prepend = true, attrs = { @JsonAppend.Attr(value = context) })
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DebiasRequest {
 
-    private String type ="Request";
+    private String type = REQUEST;
     private Params params;
     private long totalItems;
     private List<Item> items;

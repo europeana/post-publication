@@ -9,7 +9,6 @@ import eu.europeana.postpublication.debias.io.ContextSerializer;
 import eu.europeana.postpublication.debias.io.CustomHttpResponseHandler;
 import eu.europeana.postpublication.debias.model.Context;
 import eu.europeana.postpublication.debias.model.DebiasRequest;
-import eu.europeana.postpublication.debias.model.DebiasResponse;
 import eu.europeana.postpublication.debias.utils.SerialisationUtils;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -32,6 +31,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+
+import static eu.europeana.postpublication.debias.utils.AppConstants.MAX_CONNECTIONS;
+import static eu.europeana.postpublication.debias.utils.AppConstants.MAX_CONNECTIONS_PER_ROUTE;
 
 @PropertySource("classpath:post-publication.properties")
 @PropertySource(value = "classpath:post-publication.user.properties", ignoreResourceNotFound = true)
