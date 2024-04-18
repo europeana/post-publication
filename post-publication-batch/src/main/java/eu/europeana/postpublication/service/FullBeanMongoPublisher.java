@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -35,7 +36,7 @@ public class FullBeanMongoPublisher extends FullBeanUpdater {
     private final TriConsumer<FullBeanImpl, FullBeanImpl, Pair<Date, Date>> fullBeanPreprocessor;
 
 
-    public FullBeanMongoPublisher(RecordDao edmMongoClient, TriConsumer<FullBeanImpl, FullBeanImpl, Pair<Date, Date>> fullBeanPreprocessor) {
+    public FullBeanMongoPublisher(@Nullable RecordDao edmMongoClient, TriConsumer<FullBeanImpl, FullBeanImpl, Pair<Date, Date>> fullBeanPreprocessor) {
         super(fullBeanPreprocessor);
         this.edmMongoClient = edmMongoClient;
         this.fullBeanPreprocessor = fullBeanPreprocessor;

@@ -22,7 +22,7 @@ import java.util.List;
 import static eu.europeana.postpublication.debias.utils.AppConstants.ITEMS;
 import static eu.europeana.postpublication.debias.utils.AppConstants.context;
 
-public abstract class SerialisationUtils {
+public class SerialisationUtils {
 
     private final AnnotationLdParser annotationLdParser = new AnnotationLdParser();
 

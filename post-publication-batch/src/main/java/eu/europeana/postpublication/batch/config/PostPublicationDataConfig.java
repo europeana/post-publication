@@ -69,12 +69,18 @@ public class PostPublicationDataConfig {
      */
     @Bean(name = AppConstants.RECORD_DAO)
     public RecordDao recordDao() {
+        if (settings.getWriteDatabase().isEmpty()) {
+            return  null;
+        }
         logger.info("Configuring writer database: {}", settings.getWriteDatabase());
         return new RecordDao(MongoClients.create(settings.getMongoWriteConnectionUrl()), settings.getWriteDatabase(), true);
     }
 
     @Bean(name = AppConstants.BEAN_WRITER_DATA_STORE)
     public Datastore recordDaoDatastore() {
+        if (recordDao() == null) {
+            return null;
+        }
         return recordDao().getDatastore();
     }
 

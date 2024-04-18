@@ -68,41 +68,20 @@ public class PostPublicationJobConfig {
     }
 
 
+    // TODO failed repo logic is removed for now.
     @Bean
     public Job syncRecords() {
         if (!postPublicationSettings.IsFrameworkEnabled()) {
             return null;
         }
 
-        PostPublicationJobMetadata jobMetadata = postPublicationJobMetaRepository.getMostRecentPostPublicationMetadata();
         Instant from = Instant.EPOCH;
 
         Instant startTime = Instant.now();
-
-        // take from value from previous run if it exists
-        if (jobMetadata != null) {
-            from = jobMetadata.getLastSuccessfulStartTime();
-        } else {
-            jobMetadata = new PostPublicationJobMetadata();
-        }
-
-        // set the job metadata LastSuccessfulStartTime
-        jobMetadata.setLastSuccessfulStartTime(startTime);
         List<String> datasetsToProcess = postPublicationSettings.getDatasetsToProcess();
-
         List<String> fieldsToFetch = pipelineRegistryHandler.get(executionStep).getFieldsToFetchFromReader();
-
         // add the failed sets and records for processing
         List<String> recordsToProcess = new ArrayList<>();
-
-        // todo optimise failed repo as well depdending on step
-        PostPublicationFailedMetadata failedMetadata = postPublicationFailedRecordsRepository.getPostPublicationFailedMetadata(); // get the one which is not processed
-        if (failedMetadata != null) {
-            // if present datasets and records will be added for processing
-            BatchUtils.processFailedData(failedMetadata.getFailedRecords(), datasetsToProcess, recordsToProcess);
-        } else {
-            failedMetadata = new PostPublicationFailedMetadata();
-        }
 
         if (logger.isInfoEnabled()) {
             logger.info(

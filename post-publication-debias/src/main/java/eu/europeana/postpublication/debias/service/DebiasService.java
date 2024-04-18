@@ -128,7 +128,7 @@ public class DebiasService extends SerialisationUtils {
             }
             return response;
         } catch (IOException e) {
-            throw new DebiasException(e.getMessage());
+            throw new DebiasException(e.getMessage(), e);
         } catch (AnnotationValidationException e) {
             throw new DebiasException(e.getMessage(), e);
         }
