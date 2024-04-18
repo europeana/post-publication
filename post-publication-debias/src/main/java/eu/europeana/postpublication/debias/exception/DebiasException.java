@@ -9,6 +9,10 @@ public class DebiasException extends EuropeanaApiException {
         super(msg);
     }
 
+    public DebiasException(String msg, Throwable t) {
+        super(msg, t);
+    }
+
     @Override
     public HttpStatus getResponseStatus() {
         return HttpStatus.INTERNAL_SERVER_ERROR;

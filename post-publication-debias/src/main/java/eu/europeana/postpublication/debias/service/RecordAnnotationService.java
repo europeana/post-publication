@@ -16,6 +16,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Function;
 
+// TODO check the region codes
 @Service
 public class RecordAnnotationService {
 
@@ -69,7 +70,7 @@ public class RecordAnnotationService {
             }
             annotations.addAll(response);
         }
-        LOG.debug("Time taken to process {} bean {} ms- ", fullBeans.size(), (System.currentTimeMillis() - start));
+        LOG.debug("Time taken to process {} bean {} ms ", fullBeans.size(), (System.currentTimeMillis() - start));
         return annotations;
     }
 
@@ -79,13 +80,16 @@ public class RecordAnnotationService {
         if (fieldData != null && !fieldData.isEmpty()) {
             for (Map.Entry<String, List<String>> entry : fieldData.entrySet()) {
                 if (DebiasLanguage.isSupported(entry.getKey())) {
+                    // get the two-letter ISO code language. there are cases where we will have region codes
+                    // we need to fetch the first two ISO letter for the request
+                    String language = DebiasLanguage.getLanguage(entry.getKey()).name().toLowerCase();
                     Item item = null;
-                    if (itemsMap.containsKey(entry.getKey())) {
+                    if (itemsMap.containsKey(language)) {
                         // check if the item already is present for that language, if not default to new item
-                        item = getExistingItemOrDefaultNew(itemsMap, entry.getKey(), bean.getAbout());
+                        item = getExistingItemOrDefaultNew(itemsMap, language, bean.getAbout());
                     } else {
                         item = new Item(bean.getAbout());
-                        itemsMap.put(entry.getKey(), new ArrayList<>(Arrays.asList(item))); // create modifiable list
+                        itemsMap.put(language, new ArrayList<>(Arrays.asList(item))); // create modifiable list
                     }
                     // update the field value in the Item
                     List<String> existingValue = getValueOfTheListFields(item, true).apply(field.getName());

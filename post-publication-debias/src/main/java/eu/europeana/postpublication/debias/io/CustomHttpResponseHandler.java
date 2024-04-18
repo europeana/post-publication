@@ -32,12 +32,10 @@ public class CustomHttpResponseHandler extends SerialisationUtils implements Htt
         } else {
             try {
                 String json = EntityUtils.toString(classicHttpResponse.getEntity());
-                System.out.println(json);
                 return deserialize(mapper, json);
             } catch (JsonParseException e) {
                 throw new IOException("Error deserializing response");
             }
         }
     }
-
 }

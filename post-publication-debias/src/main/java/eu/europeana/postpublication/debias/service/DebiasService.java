@@ -1,8 +1,8 @@
 package eu.europeana.postpublication.debias.service;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import eu.europeana.annotation.definitions.exception.AnnotationValidationException;
 import eu.europeana.annotation.definitions.model.Annotation;
 import eu.europeana.postpublication.debias.exception.DebiasException;
 import eu.europeana.postpublication.debias.io.ContextSerializer;
@@ -35,6 +35,10 @@ import java.util.List;
 import static eu.europeana.postpublication.debias.utils.AppConstants.MAX_CONNECTIONS;
 import static eu.europeana.postpublication.debias.utils.AppConstants.MAX_CONNECTIONS_PER_ROUTE;
 
+/**
+ * Debias service to send request and fetch list of annotations
+ * @author Srishti Singh
+ */
 @PropertySource("classpath:post-publication.properties")
 @PropertySource(value = "classpath:post-publication.user.properties", ignoreResourceNotFound = true)
 public class DebiasService extends SerialisationUtils {
@@ -49,8 +53,12 @@ public class DebiasService extends SerialisationUtils {
     private final ObjectMapper mapper = new ObjectMapper();
 
     public DebiasService() {
-
     }
+
+    /**
+     * Testing purposes. If we want to create the instance of Debias service
+     * @param debiasEndpoint
+     */
     public DebiasService (String debiasEndpoint) {
         this.debiasEndpoint = debiasEndpoint;
         init();
@@ -77,13 +85,19 @@ public class DebiasService extends SerialisationUtils {
 
     }
 
+    /**
+     * Fetch the List of Annotations from the Debias client for the request
+     * @param request request to be sent
+     * @return list of annotations
+     * @throws DebiasException
+     */
     public List<Annotation> getAnnotationsForBiasTerms(DebiasRequest request) throws DebiasException {
         HttpPost post = createRequest(debiasEndpoint, request);
         List<Annotation> response = sendRequestAndGetResponse(post);
         return response;
     }
 
-    public HttpPost createRequest(String debiasEndpoint, DebiasRequest request) throws DebiasException {
+    private HttpPost createRequest(String debiasEndpoint, DebiasRequest request) throws DebiasException {
         try (OutputStream stream = new ByteArrayOutputStream()) {
             HttpPost post = new HttpPost(debiasEndpoint);
             serialise(mapper, request, stream);
@@ -115,6 +129,8 @@ public class DebiasService extends SerialisationUtils {
             return response;
         } catch (IOException e) {
             throw new DebiasException(e.getMessage());
+        } catch (AnnotationValidationException e) {
+            throw new DebiasException(e.getMessage(), e);
         }
     }
 }

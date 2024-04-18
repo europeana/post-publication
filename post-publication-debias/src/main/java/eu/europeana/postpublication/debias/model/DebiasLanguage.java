@@ -6,9 +6,14 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Debias language class for the supported languages
+ * The languages that the tool will support are: French: fr, German: de, Dutch: nl, Italian: it, English: en
+ * @author Srishti Singh
+ */
 public enum DebiasLanguage {
 
-    EN, NL, FR, DE, ES, SV, IT, FI, DA, EL, CS, SK, SL, PT, HU, LT, PL, RO, BG, HR, LV, GA, MT, ET, NO, CA, RU;
+    EN, NL, FR, DE, IT ;
 
     private static final Set<String> LANGUAGES = new HashSet<>(Stream.of(DebiasLanguage.values())
             .map(Enum::name)
