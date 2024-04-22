@@ -73,6 +73,45 @@ public class PostPublicationSettings implements InitializingBean {
     @Value("${step.to.execute}")
     private String stepToExecute;
 
+    public String getAnnotationsFileName() {
+        return annotationsFileName;
+    }
+
+    @Value("${annotation.file.name}")
+    private String annotationsFileName;
+
+    // Annotation client properties
+
+    @Value("${annotation.service.uri}")
+    private String annotationServiceUrl;
+
+    @Value("${annotation.api.key}")
+    private String annotationApiKey;
+
+    @Value("${annotation.id.baseUrl}")
+    private String annotationIdBaseUrl;
+
+    @Value("${annotation.item.data.endpoint}")
+    private String annotationItemDataEndpoint;
+
+    @Value("${annotation.client.api.endpoint}")
+    private String annotationClientApiEndpoint;
+
+    @Value("${annotation.header.name}")
+    private String authHeaderName;
+
+    @Value("${annotation.regular.authorization.value}")
+    private String annotationRegularAuthValue;
+
+    @Value("${annotation.admin.authorization.value}")
+    private String annotationAdminAuthValue;
+
+    @Value("${oauth.service.uri}")
+    private String outhServiceUrl;
+
+    @Value("${oauth.token.request.params.post_publication}")
+    private String outhTokenForPostPublication;
+
     public boolean IsFrameworkEnabled() {
         return isFrameworkEnabled;
     }
@@ -142,6 +181,46 @@ public class PostPublicationSettings implements InitializingBean {
 
     public String getStepToExecute() {
         return stepToExecute;
+    }
+
+    public String getAnnotationServiceUrl() {
+        return annotationServiceUrl;
+    }
+
+    public String getAnnotationApiKey() {
+        return annotationApiKey;
+    }
+
+    public String getAnnotationIdBaseUrl() {
+        return annotationIdBaseUrl;
+    }
+
+    public String getAnnotationItemDataEndpoint() {
+        return annotationItemDataEndpoint;
+    }
+
+    public String getAnnotationClientApiEndpoint() {
+        return annotationClientApiEndpoint;
+    }
+
+    public String getAuthHeaderName() {
+        return authHeaderName;
+    }
+
+    public String getAnnotationRegularAuthValue() {
+        return annotationRegularAuthValue;
+    }
+
+    public String getAnnotationAdminAuthValue() {
+        return annotationAdminAuthValue;
+    }
+
+    public String getOuthServiceUrl() {
+        return outhServiceUrl;
+    }
+
+    public String getOuthTokenForPostPublication() {
+        return outhTokenForPostPublication;
     }
 
     private void validateRequiredSettings() {

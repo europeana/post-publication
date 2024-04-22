@@ -1,26 +1,18 @@
 package eu.europeana.postpublication.debias.service;
 
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import eu.europeana.annotation.definitions.exception.AnnotationValidationException;
 import eu.europeana.annotation.definitions.model.Annotation;
 import eu.europeana.postpublication.debias.exception.DebiasException;
 import eu.europeana.postpublication.debias.io.ContextSerializer;
-import eu.europeana.postpublication.debias.io.CustomHttpResponseHandler;
 import eu.europeana.postpublication.debias.model.Context;
 import eu.europeana.postpublication.debias.model.DebiasRequest;
 import eu.europeana.postpublication.debias.utils.SerialisationUtils;
-import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
-import org.apache.hc.core5.http.Header;
-import org.apache.hc.core5.http.io.HttpClientResponseHandler;
-import org.apache.hc.core5.http.io.SocketConfig;
-import org.apache.hc.core5.http.io.entity.StringEntity;
-import org.apache.hc.core5.util.Timeout;
+import org.apache.hc.core5.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.stanbol.commons.exception.JsonParseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpHeaders;
@@ -30,10 +22,11 @@ import javax.annotation.PostConstruct;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.List;
-
-import static eu.europeana.postpublication.debias.utils.AppConstants.MAX_CONNECTIONS;
-import static eu.europeana.postpublication.debias.utils.AppConstants.MAX_CONNECTIONS_PER_ROUTE;
 
 /**
  * Debias service to send request and fetch list of annotations
@@ -48,9 +41,9 @@ public class DebiasService extends SerialisationUtils {
     @Value("${debias.endpoint:}")
     private String debiasEndpoint;
 
-    private CloseableHttpClient debiasClient;
-
     private final ObjectMapper mapper = new ObjectMapper();
+
+    private HttpClient httpClient;
 
     public DebiasService() {
     }
@@ -65,17 +58,17 @@ public class DebiasService extends SerialisationUtils {
     }
 
     /**
-     * Creates a new client that can send requests to debias client. Note that the client needs
+     * Creates a new Http2 client that can send requests to debias client. Note that the client needs
      * to be closed when it's not used anymore
      */
     @PostConstruct
     private void init() {
-        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-        cm.setMaxTotal(MAX_CONNECTIONS);
-        cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
-        cm.setDefaultSocketConfig(SocketConfig.custom().setSoKeepAlive(true).setSoTimeout(Timeout.ofMilliseconds(3600000)).build());
-        debiasClient = HttpClients.custom().setConnectionManager(cm).build();
-        LOG.info("Debias service is initialized with Endpoint - {}", debiasEndpoint);
+        httpClient = HttpClient
+                .newBuilder()
+                .version(HttpClient.Version.HTTP_2)
+                .build();
+
+        LOG.info("Http2 client initialised for the debias endpoint {} ", debiasEndpoint);
 
         SimpleModule module = new SimpleModule();
         module.addSerializer(Context.class, ContextSerializer.INSTANCE);
@@ -87,50 +80,47 @@ public class DebiasService extends SerialisationUtils {
 
     /**
      * Fetch the List of Annotations from the Debias client for the request
+     *
      * @param request request to be sent
      * @return list of annotations
      * @throws DebiasException
      */
     public List<Annotation> getAnnotationsForBiasTerms(DebiasRequest request) throws DebiasException {
-        HttpPost post = createRequest(debiasEndpoint, request);
+        HttpRequest post = createRequest(debiasEndpoint, request);
         List<Annotation> response = sendRequestAndGetResponse(post);
         return response;
     }
 
-    private HttpPost createRequest(String debiasEndpoint, DebiasRequest request) throws DebiasException {
+    private HttpRequest createRequest(String debiasEndpoint, DebiasRequest request) throws DebiasException {
         try (OutputStream stream = new ByteArrayOutputStream()) {
-            HttpPost post = new HttpPost(debiasEndpoint);
             serialise(mapper, request, stream);
-            post.setEntity(new StringEntity(stream.toString()));
-
-            post.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-            post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Sending POST {}", debiasEndpoint);
-                LOG.trace("  body {}", request);
-                LOG.trace("  headers:");
-                for (Header header : post.getHeaders()) {
-                    LOG.trace("  {}: {}", header.getName(), header.getValue());
-                }
-            }
-            return post;
+            return HttpRequest
+                    .newBuilder(URI.create(debiasEndpoint))
+                    .POST(HttpRequest.BodyPublishers.ofString(stream.toString()))
+                    .setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .build();
         } catch (IOException e) {
             throw new DebiasException(e.getMessage());
         }
     }
 
-    private List<Annotation> sendRequestAndGetResponse(HttpPost post) throws DebiasException {
+    // TODO error messages from Debias are in a very complex structure. Would be nice to have some solution for that. To know what excatly went wrong
+    // For now whole error response body is sent if there is an error in the exception
+    private List<Annotation> sendRequestAndGetResponse(HttpRequest post) throws DebiasException {
         try {
-            HttpClientResponseHandler<List<Annotation>> responseHandler = new CustomHttpResponseHandler(mapper);
-            List<Annotation> response = debiasClient.execute(post, responseHandler);
-            if (response == null) {
-                throw new DebiasException("Empty response from client");
+            HttpResponse<String> response = httpClient.send(post, HttpResponse.BodyHandlers.ofString());
+            int httpStatusCode = response.statusCode();
+            if (httpStatusCode != HttpStatus.SC_OK) {
+                throw new IOException("Error from Debias API: " +
+                        httpStatusCode + " - " + response.body());
+            } else {
+                return deserialize(mapper, response.body());
             }
-            return response;
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             throw new DebiasException(e.getMessage(), e);
-        } catch (AnnotationValidationException e) {
-            throw new DebiasException(e.getMessage(), e);
+        } catch (JsonParseException e) {
+            throw new DebiasException("Error from AnnotationLdParser while deserializing response  - " + e.getMessage(), e);
         }
     }
 }

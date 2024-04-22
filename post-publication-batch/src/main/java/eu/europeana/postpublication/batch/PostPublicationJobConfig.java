@@ -1,14 +1,14 @@
 package eu.europeana.postpublication.batch;
 
-import eu.europeana.corelib.definitions.edm.beans.FullBean;
+import eu.europeana.annotation.definitions.model.Annotation;
 import eu.europeana.postpublication.batch.model.ExecutionStep;
 import eu.europeana.postpublication.batch.model.PostPublicationFailedMetadata;
 import eu.europeana.postpublication.batch.model.PostPublicationJobMetadata;
 import eu.europeana.postpublication.batch.reader.ItemReaderConfig;
 import eu.europeana.postpublication.batch.repository.PostPublicationFailedRecordsRepo;
 import eu.europeana.postpublication.batch.repository.PostPublicationJobMetadataRepo;
-import eu.europeana.postpublication.batch.utils.BatchUtils;
 import eu.europeana.postpublication.batch.config.PostPublicationSettings;
+import eu.europeana.postpublication.batch.writer.AnnotationFileWriter;
 import eu.europeana.postpublication.exception.MongoConnnectionException;
 import eu.europeana.postpublication.utils.AppConstants;
 import org.springframework.batch.core.Job;
@@ -16,6 +16,7 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.support.SynchronizedItemStreamReader;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -126,7 +127,8 @@ public class PostPublicationJobConfig {
                 .chunk(postPublicationSettings.getBatchChunkSize())
                 .reader(reader)
                 .processor(pipelineRegistryHandler.get(executionStep).getItemProcessor())
-                .writer(pipelineRegistryHandler.get(executionStep).getItemWriter())
+                .writer(writeAnnotationsInFile() ? annotationFileWriter() : pipelineRegistryHandler.get(executionStep).getItemWriter())
+                //.writer(pipelineRegistryHandler.get(executionStep).getItemWriter())
                 .listener(pipelineRegistryHandler.get(executionStep).getItemProcessListener())
                 .faultTolerant()
                 .processorNonTransactional()
@@ -138,6 +140,20 @@ public class PostPublicationJobConfig {
                 .throttleLimit(postPublicationSettings.gePpSyncThrottleLimit())
                 .build();
     }
+
+    /**
+     * Determines if annotations should be written in a file
+     * @return
+     */
+    private boolean writeAnnotationsInFile() {
+        return executionStep.equals(ExecutionStep.DEBIAS) && !postPublicationSettings.getAnnotationsFileName().isEmpty();
+    }
+
+    @Bean
+    public FlatFileItemWriter<List<Annotation>> annotationFileWriter() {
+        return new AnnotationFileWriter(postPublicationSettings).build();
+    }
+
 
     private Step initStats(BatchSyncStats stats, Instant startTime) {
         return stepBuilderFactory

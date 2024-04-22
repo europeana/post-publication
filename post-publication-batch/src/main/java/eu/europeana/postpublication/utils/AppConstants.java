@@ -18,6 +18,8 @@ public class AppConstants {
     public static final String LANGUAGE_DETECTION_SERVICE_BEAN = "languageDetectionService";
 
     public static final String DEBIAS_SERVICE_BEAN = "debiasService";
+    public static final String ANNOTATION_API_CLIENT_BEAN = "annotationApiClientConfiguration";
+    public static final String ANNOTATION_API_WEB_PROTOCOL_BEAN = "annotationApiWebProtocol";
 
     public static final String EXECUTION_STEPS_BEAN = "executionSteps";
 

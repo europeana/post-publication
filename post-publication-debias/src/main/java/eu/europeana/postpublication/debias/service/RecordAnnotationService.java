@@ -16,7 +16,6 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Function;
 
-// TODO check the region codes
 @Service
 public class RecordAnnotationService {
 

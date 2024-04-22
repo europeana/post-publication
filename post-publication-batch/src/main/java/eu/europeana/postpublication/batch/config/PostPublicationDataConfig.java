@@ -2,6 +2,10 @@ package eu.europeana.postpublication.batch.config;
 
 import com.mongodb.client.MongoClients;
 import dev.morphia.Datastore;
+import eu.europeana.annotation.client.WebAnnotationProtocolApi;
+import eu.europeana.annotation.client.WebAnnotationProtocolApiImpl;
+import eu.europeana.annotation.client.config.ClientConfiguration;
+import eu.europeana.annotation.client.connection.AnnotationApiConnection;
 import eu.europeana.batch.entity.JobExecutionEntity;
 import eu.europeana.corelib.solr.bean.impl.FullBeanImpl;
 import eu.europeana.indexing.exception.SetupRelatedIndexingException;
@@ -27,6 +31,10 @@ import org.springframework.context.annotation.Primary;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
+import java.util.Properties;
+
+import static eu.europeana.postpublication.debias.utils.AppConstants.POST_PUBLICATION_USER;
+
 
 @Configuration
 public class PostPublicationDataConfig {
@@ -163,5 +171,45 @@ public class PostPublicationDataConfig {
     @Bean(name = AppConstants.DEBIAS_SERVICE_BEAN)
     public DebiasService getDebiasService() {
         return new DebiasService();
+    }
+
+
+    @Bean(name = AppConstants.ANNOTATION_API_CLIENT_BEAN)
+    public ClientConfiguration annotationApiClientConfiguration() {
+        ClientConfiguration annotationApiClientConfig = new ClientConfiguration(loadProperties());
+        return annotationApiClientConfig;
+    }
+
+    @Bean(name = AppConstants.ANNOTATION_API_WEB_PROTOCOL_BEAN)
+    public WebAnnotationProtocolApi getWebAnnotationProtocolApi() {
+        return new WebAnnotationProtocolApiImpl(
+                annotationApiClientConfiguration(),
+                new AnnotationApiConnection(
+                        annotationApiClientConfiguration().getServiceUri(),
+                        annotationApiClientConfiguration().getApiKey()));
+    }
+
+
+    /**
+     * Creates a new property file with post publication properties and annotation api client properties needed
+     * to instantiate Annotation api client
+     *
+     * @return
+     */
+    private Properties loadProperties() {
+        Properties properties = new Properties();
+        properties.put(ClientConfiguration.PROP_ANNOTATION_SERVICE_BASE_URI, settings.getAnnotationServiceUrl());
+        properties.put(ClientConfiguration.PROP_ANNOTATION_API_KEY, settings.getAnnotationApiKey());
+        properties.put(ClientConfiguration.PROP_ANNOTATION_ITEM_DATA_ENDPOINT, settings.getAnnotationItemDataEndpoint());
+        properties.put(ClientConfiguration.PROP_ANNOTATION_CLIENT_API_ENDPOINT, settings.getAnnotationClientApiEndpoint());
+
+        properties.put(ClientConfiguration.PROP_AUTHORIZATION_HEADER_NAME, settings.getAuthHeaderName());
+        properties.put(ClientConfiguration.PROP_REGULAR_AUTHORIZATION_HEADER_VALUE, settings.getAnnotationRegularAuthValue());
+        properties.put(ClientConfiguration.PROP_ADMIN_ANNOTATION_HEADER_VALUE, settings.getAnnotationAdminAuthValue());
+
+        properties.put(ClientConfiguration.PROP_OAUTH_SERVICE_URI, settings.getOuthServiceUrl());
+        properties.put(ClientConfiguration.PROP_OAUTH_REQUEST_PARAMS_PREFIX + POST_PUBLICATION_USER, settings.getOuthTokenForPostPublication());
+
+        return properties;
     }
 }

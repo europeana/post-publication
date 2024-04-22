@@ -36,7 +36,7 @@ public class RecordDbReaderItem extends AbstractItemCountingItemStreamItemReader
     @Override
     protected void doOpen() {
         setSaveState(false); // mongo reader is not fault tolerant
-        setName("Mongo record reader");
+        setName(RecordDbReaderItem.class.getSimpleName());
     }
 
     @PreDestroy

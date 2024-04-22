@@ -15,5 +15,5 @@ public class AppConstants {
 
     public static final String REQUEST = "Request";
 
-
+    public static final String POST_PUBLICATION_USER = "post_publication";
 }

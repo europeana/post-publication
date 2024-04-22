@@ -4,15 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.cfg.ContextAttributes;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
 import eu.europeana.annotation.definitions.model.Annotation;
 import eu.europeana.annotation.definitions.model.vocabulary.MotivationTypes;
 import eu.europeana.annotation.utils.parse.AnnotationLdParser;
 import eu.europeana.postpublication.debias.model.Context;
 import eu.europeana.postpublication.debias.model.DebiasRequest;
-import eu.europeana.postpublication.debias.model.DebiasResponse;
-import eu.europeana.postpublication.debias.model.PartOf;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.stanbol.commons.exception.JsonParseException;
 
 import java.io.IOException;
@@ -32,7 +28,7 @@ public class SerialisationUtils {
      * @param stream
      * @throws IOException
      */
-    public void serialise(ObjectMapper mapper, DebiasRequest request, OutputStream stream) throws IOException {
+    protected void serialise(ObjectMapper mapper, DebiasRequest request, OutputStream stream) throws IOException {
         ContextAttributes attrs = ContextAttributes.getEmpty()
                 .withSharedAttribute(context, new Context("http://data.europeana.eu/item/"));
         mapper.setDefaultAttributes(attrs);
@@ -57,6 +53,16 @@ public class SerialisationUtils {
             }
         }
         return response;
-
     }
+
+    /**
+     * Serialise the Annotation
+     * @param annotation
+     * @param stream
+     * @throws IOException
+     */
+    public static void serialiseAnnotation(ObjectMapper mapper, Annotation annotation, OutputStream stream) throws IOException {
+        mapper.writerWithDefaultPrettyPrinter().writeValues(stream).write(annotation);
+    }
+
 }
