@@ -1,5 +1,6 @@
 package eu.europeana.postpublication.batch.writer;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.europeana.annotation.definitions.model.Annotation;
 import eu.europeana.postpublication.batch.config.PostPublicationSettings;
@@ -35,6 +36,8 @@ public class AnnotationFileWriter extends FlatFileItemWriterBuilder<List<Annotat
 
     @Override
     public FlatFileItemWriter<List<Annotation>> build() {
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
         this.name("Annotation File Writer")
                 .headerCallback(createHeaderCallBack())
                 .lineAggregator(createLineAggregator())

@@ -1,5 +1,6 @@
 package eu.europeana.postpublication.debias.service;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.europeana.annotation.client.WebAnnotationProtocolApi;
 import eu.europeana.annotation.definitions.model.Annotation;
@@ -28,6 +29,7 @@ public class AnnotationClientService extends SerialisationUtils {
 
     @Autowired
     public AnnotationClientService(WebAnnotationProtocolApi webAnnotationProtocolApi) {
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         this.webAnnotationProtocolApi = webAnnotationProtocolApi;
     }
 
@@ -41,6 +43,9 @@ public class AnnotationClientService extends SerialisationUtils {
      */
     public void createAnnotations(List<? extends Annotation> annotations) throws DebiasException {
         for(Annotation annotation : annotations) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Writing annotation {}", annotation.getBody().getValue());
+            }
             try (OutputStream stream = new ByteArrayOutputStream()) {
                 serialiseAnnotation(mapper, annotation, stream);
                 webAnnotationProtocolApi.createAnnotation(stream.toString(), MotivationTypes.HIGHLIGHTING.getOaType(), POST_PUBLICATION_USER);

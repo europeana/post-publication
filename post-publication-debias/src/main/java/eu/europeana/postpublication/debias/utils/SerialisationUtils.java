@@ -62,7 +62,7 @@ public class SerialisationUtils {
      * @throws IOException
      */
     public static void serialiseAnnotation(ObjectMapper mapper, Annotation annotation, OutputStream stream) throws IOException {
-        mapper.writerWithDefaultPrettyPrinter().writeValues(stream).write(annotation);
+        mapper.writer().writeValues(stream).write(annotation);
     }
 
 }

@@ -99,6 +99,7 @@ public class DebiasService extends SerialisationUtils {
                     .POST(HttpRequest.BodyPublishers.ofString(stream.toString()))
                     .setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                     .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setHeader(HttpHeaders.ACCEPT_ENCODING, "gzip, deflate")
                     .build();
         } catch (IOException e) {
             throw new DebiasException(e.getMessage());
