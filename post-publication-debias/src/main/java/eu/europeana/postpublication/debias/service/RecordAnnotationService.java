@@ -21,7 +21,19 @@ public class RecordAnnotationService {
 
     private static final Logger LOG = LogManager.getLogger(RecordAnnotationService.class);
 
+    /**
+     * Look for the exact field name in class -
+     * @see eu.europeana.corelib.solr.entity.PhysicalThingImpl
+     * so if in future we have to add the fields -  "dcSubject", "dcType" in this set INCLUDE_PROXY_MAP_FIELDS
+     * Also in the
+     *     @see eu.europeana.postpublication.debias.model.Item class add the fields with the same name
+     *
+     * The same name startegy is beneficial while adding and updaing the field value while processing bean
+     * in both Item and FullBean class
+     *
+     */
     private static final Set<String> INCLUDE_PROXY_MAP_FIELDS = Set.of("dcTitle", "dctermsAlternative", "dcDescription");
+
     protected static final ReflectionUtils.FieldFilter proxyFieldFilter = field -> field.getType().isAssignableFrom(Map.class) &&
             INCLUDE_PROXY_MAP_FIELDS.contains(field.getName());
 

@@ -5,6 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
+/**
+ * Fields to be sent in item to Debias tool
+ * Make sure the field names are same as the ones present in the Set INCLUDE_PROXY_MAP_FIELDS
+ * @see eu.europeana.postpublication.debias.service.RecordAnnotationService.INCLUDE_PROXY_MAP_FIELDS
+ *
+ * But the json property value will be differnt hence add the @JsonProperty tag for the json value
+ * @author srishti singh
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Item {
 
@@ -18,6 +26,12 @@ public class Item {
 
     @JsonProperty("dc:termsAlternative")
     private List<String> dctermsAlternative;
+
+//    @JsonProperty("dc:subject")
+//    private List<String> dcSubject;
+//
+//    @JsonProperty("dc:type")
+//    private List<String> dcType;
 
     public Item(String id) {
         this.id = id;
@@ -54,6 +68,22 @@ public class Item {
     public void setDctermsAlternative(List<String> dctermsAlternative) {
         this.dctermsAlternative = dctermsAlternative;
     }
+
+//    public List<String> getDcSubject() {
+//        return dcSubject;
+//    }
+//
+//    public void setDcSubject(List<String> dcSubject) {
+//        this.dcSubject = dcSubject;
+//    }
+//
+//    public List<String> getDcType() {
+//        return dcType;
+//    }
+//
+//    public void setDcType(List<String> dcType) {
+//        this.dcType = dcType;
+//    }
 
     @Override
     public String toString() {
