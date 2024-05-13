@@ -53,7 +53,7 @@ public class RecordDbReaderItem extends AbstractItemCountingItemStreamItemReader
         int start = page * settings.getBatchChunkSize();
         List<? extends FullBean> result = recordService.getNextPageOfRecords(start, settings.getBatchChunkSize(), queryFilters, projectionFields);
 
-       // LOG.info( "page {} ", page);
+
 
         if (result.isEmpty() || result.size() < settings.getBatchChunkSize()) {
             return null;

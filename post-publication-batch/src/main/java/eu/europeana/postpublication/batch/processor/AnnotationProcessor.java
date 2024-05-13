@@ -26,10 +26,8 @@ public class AnnotationProcessor implements ItemProcessor<List<FullBean>, List<A
 
     @Override
     public List<Annotation> process(List<FullBean> fullBeans) throws Exception {
-//        if (logger.isDebugEnabled()) {
-//            logger.debug(
-//                    "processing {} - {}", fullBeans.size(), fullBeans.stream().map(f -> f.getAbout()).collect(Collectors.toList()));
-//        }
+        logger.debug("processing {} items" , fullBeans.size());
+        //"processing {} - {}", fullBeans.size(), fullBeans.stream().map(f -> f.getAbout()).collect(Collectors.toList());
         return recordAnnotationService.process(fullBeans);
     }
 }

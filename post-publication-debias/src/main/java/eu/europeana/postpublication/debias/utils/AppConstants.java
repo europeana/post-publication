@@ -5,8 +5,8 @@ public class AppConstants {
     public static final int MAX_CONNECTIONS = 100;
     public static final int MAX_CONNECTIONS_PER_ROUTE = 100;
 
-    public static final String context = "@context";
-    public static final String base = "@base";
+    public static final String CONTEXT = "@context";
+    public static final String BASE = "@base";
     public static final String PARTOF = "partOf";
     public static final String TOTAL = "total";
     public static final String MODIFIED = "modified";

@@ -4,10 +4,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonAppend;
 
 import java.util.List;
-import static eu.europeana.postpublication.debias.utils.AppConstants.context;
+import static eu.europeana.postpublication.debias.utils.AppConstants.CONTEXT;
 import static eu.europeana.postpublication.debias.utils.AppConstants.REQUEST;
 
-@JsonAppend(prepend = true, attrs = { @JsonAppend.Attr(value = context) })
+@JsonAppend(prepend = true, attrs = { @JsonAppend.Attr(value = CONTEXT) })
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DebiasRequest {
 

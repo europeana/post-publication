@@ -17,7 +17,7 @@ public enum DebiasLanguage {
 
     private static final Set<String> LANGUAGES = new HashSet<>(Stream.of(DebiasLanguage.values())
             .map(Enum::name)
-            .collect(Collectors.toList()));
+            .toList());
 
     private static final String SEPARATOR = ",";
 

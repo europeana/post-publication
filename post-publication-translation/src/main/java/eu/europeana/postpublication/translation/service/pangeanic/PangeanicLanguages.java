@@ -7,7 +7,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -38,11 +37,11 @@ public enum PangeanicLanguages {
 
     private static final Set<String> SUPPORTED_LANGUAGES = new HashSet<>(Stream.of(PangeanicLanguages.values())
             .map(Enum::name)
-            .collect(Collectors.toList()));
+            .toList());
 
     private static final List<LanguagePair> TRANSLATION_PAIRS = new ArrayList<>(Stream.of(PangeanicLanguages.values())
             .map(e -> new LanguagePair(e.name(), Language.EN.name()))
-            .collect(Collectors.toList()));
+            .toList() );
 
     /**
      * Returns the threshold value for the Language.

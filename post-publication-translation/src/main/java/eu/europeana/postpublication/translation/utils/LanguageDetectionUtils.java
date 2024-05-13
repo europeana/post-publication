@@ -12,7 +12,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class LanguageDetectionUtils {
 
@@ -168,7 +167,7 @@ public class LanguageDetectionUtils {
     }
 
     public static List<String> filterValuesWithAtleastOneUnicodeOrNumber(List<String> valuesToFilter) {
-       return valuesToFilter.stream().filter(value -> unicodeNumberPattern.matcher(value).find()).collect(Collectors.toList());
+       return valuesToFilter.stream().filter(value -> unicodeNumberPattern.matcher(value).find()).toList();
     }
 
     private static List<String> checkForUrisAndGetPrefLabel(FullBean bean, List<String> nonLanguageTaggedValues) {

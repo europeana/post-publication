@@ -240,11 +240,6 @@ public class RecordTranslateService extends BaseRecordService {
         if (origFieldData != null && !origFieldData.isEmpty()  && origFieldData.containsKey(Language.ENGLISH)) {
             otherProxyFieldsWithEnglishValues.add(field.getName());
         }
-
-//        if(!otherProxyHasEnglishTag.get(field.getName())) {
-//            if (origFieldData != null && !origFieldData.isEmpty() && !origFieldData.containsKey(Language.ENGLISH) && origFieldData.containsKey(sourceLang)) {
-//            }
-//        }
     }
 
     /**

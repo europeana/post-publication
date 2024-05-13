@@ -2,7 +2,6 @@ package eu.europeana.postpublication.service;
 
 import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
-import dev.morphia.query.Projection;
 import dev.morphia.query.Query;
 import dev.morphia.query.Sort;
 import dev.morphia.query.filters.Filter;
@@ -19,7 +18,6 @@ import static eu.europeana.postpublication.utils.AppConstants.TIMESTAMP_UPDATED;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Service(AppConstants.BEAN_BATCH_RECORD_SERVICE)
@@ -90,7 +88,7 @@ public class BatchRecordService {
                 .filter(filters.toArray(new Filter[0]));
 
         return MorphiaUtils.getListOfQueryRetryable(query, new FindOptions().projection().include(projectionFields.toArray(String[]::new)))
-                .stream().map(FullBeanImpl::getAbout).collect(Collectors.toList());
+                .stream().map(FullBeanImpl::getAbout).toList();
     }
 
 
@@ -118,7 +116,7 @@ public class BatchRecordService {
                 .filter(Filters.regex(ABOUT).pattern("^/" + datasetId + "/"));
 
         return MorphiaUtils.getListOfQueryRetryable(query, new FindOptions().projection().include(projectionFields.toArray(String[]::new)))
-                .stream().map(FullBeanImpl :: getAbout).collect(Collectors.toList());
+                .stream().map(FullBeanImpl :: getAbout).toList();
     }
 
 }

@@ -16,7 +16,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import static eu.europeana.postpublication.debias.utils.AppConstants.ITEMS;
-import static eu.europeana.postpublication.debias.utils.AppConstants.context;
+import static eu.europeana.postpublication.debias.utils.AppConstants.CONTEXT;
 
 public class SerialisationUtils {
 
@@ -30,7 +30,7 @@ public class SerialisationUtils {
      */
     protected void serialise(ObjectMapper mapper, DebiasRequest request, OutputStream stream) throws IOException {
         ContextAttributes attrs = ContextAttributes.getEmpty()
-                .withSharedAttribute(context, new Context("http://data.europeana.eu/item/"));
+                .withSharedAttribute(CONTEXT, new Context("http://data.europeana.eu/item/"));
         mapper.setDefaultAttributes(attrs);
         mapper.writerWithDefaultPrettyPrinter().writeValues(stream).write(request);
     }

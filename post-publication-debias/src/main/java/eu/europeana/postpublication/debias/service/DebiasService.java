@@ -87,8 +87,7 @@ public class DebiasService extends SerialisationUtils {
      */
     public List<Annotation> getAnnotationsForBiasTerms(DebiasRequest request) throws DebiasException {
         HttpRequest post = createRequest(debiasEndpoint, request);
-        List<Annotation> response = sendRequestAndGetResponse(post);
-        return response;
+        return   sendRequestAndGetResponse(post);
     }
 
     private HttpRequest createRequest(String debiasEndpoint, DebiasRequest request) throws DebiasException {
