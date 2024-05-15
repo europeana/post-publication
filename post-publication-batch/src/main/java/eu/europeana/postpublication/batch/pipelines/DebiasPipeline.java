@@ -51,6 +51,6 @@ public class DebiasPipeline implements AbstractPipeline {
 
     @Override
     public ItemProcessListener getItemProcessListener() {
-        return listener;
+        return  listener;
     }
 }

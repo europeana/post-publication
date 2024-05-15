@@ -64,7 +64,8 @@ public class RecordAnnotationService {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Gathered data for languages {} - {} ", itemsMap.keySet(), itemsMap);
+           // LOG.debug("Gathered data for languages {} - {} ", itemsMap.keySet(), itemsMap);
+            LOG.debug("Gathered data for languages {} ", itemsMap.keySet());
         }
 
         // create Debias Requests for each language gathered

@@ -9,6 +9,12 @@ import eu.europeana.postpublication.debias.io.ContextSerializer;
 import eu.europeana.postpublication.debias.model.Context;
 import eu.europeana.postpublication.debias.model.DebiasRequest;
 import eu.europeana.postpublication.debias.utils.SerialisationUtils;
+import java.io.InputStream;
+import java.net.http.HttpResponse.BodyHandlers;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.zip.GZIPInputStream;
+import org.apache.commons.io.IOUtils;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -109,13 +115,20 @@ public class DebiasService extends SerialisationUtils {
     // For now whole error response body is sent if there is an error in the exception
     private List<Annotation> sendRequestAndGetResponse(HttpRequest post) throws DebiasException {
         try {
-            HttpResponse<String> response = httpClient.send(post, HttpResponse.BodyHandlers.ofString());
+            //HttpResponse<String> response = httpClient.send(post, BodyHandlers.ofString());
+
+            HttpResponse<InputStream> response = httpClient.send(post, HttpResponse.BodyHandlers.ofInputStream());
             int httpStatusCode = response.statusCode();
             if (httpStatusCode != HttpStatus.SC_OK) {
                 throw new IOException("Error from Debias API: " +
                         httpStatusCode + " - " + response.body());
             } else {
-                return deserialize(mapper, response.body());
+               String responseEncoding = response.headers().firstValue("Content-Encoding").orElse("");
+                if(responseEncoding.equals("gzip")){
+                    GZIPInputStream gis=new GZIPInputStream(response.body());
+                    return deserialize( mapper,IOUtils.toString(gis));
+                }
+                return deserialize(mapper, response.body().toString());
             }
         } catch (IOException | InterruptedException e) {
             throw new DebiasException(e.getMessage(), e);
