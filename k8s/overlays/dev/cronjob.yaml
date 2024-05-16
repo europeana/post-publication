@@ -22,6 +22,8 @@ spec:
               env:
                 - name: SPRING_CONFIG_ADDITIONAL_LOCATION
                   value: "file:/opt/app/config/post-publication.user.properties"
+                - name: JDK_JAVA_OPTIONS
+                  value: "--add-opens=java.base/java.nio=ALL-UNNAMED"
               volumeMounts:
                 - name: post-publication-properties
                   mountPath: "/opt/app/config/post-publication.user.properties"
