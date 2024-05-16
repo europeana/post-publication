@@ -34,6 +34,8 @@ spec:
                           -Delastic.apm.enabled=${COLLECT_APM}
                           -Delastic.apm.environment=${K8S_NAMESPACE}
                           -XX:+UseParallelGC -XX:MaxRAMPercentage=75"
+                - name: JDK_JAVA_OPTIONS
+                  value: "--add-opens=java.base/java.nio=ALL-UNNAMED"
               resources:
                 requests:
                   memory: "${POST_PUBLICATION_MEMORY_REQUEST}M"
