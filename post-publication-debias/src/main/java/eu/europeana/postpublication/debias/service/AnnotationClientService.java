@@ -56,12 +56,14 @@ public class AnnotationClientService extends SerialisationUtils {
         for (Annotation annotation : annotations) {
             LOG.debug("Writing annotation {}", annotation.getBody().getValue());
             String req = createRequestForAnnotation(annotation);
-            ResponseEntity<String> res= null;
             try {
-                 res = callAnnotationAPI(req);
+                ResponseEntity<String> res = callAnnotationAPI(req);
+                LOG.debug("Annotation Created : {}", res.getBody().toString());
             } catch (IOException e) {
-                if(req != null){ LOG.error("Request : {} ", req); }
-                if(res != null){LOG.error("Response : {} - {} ", res.getStatusCode(), res.getBody());}
+                if (req != null) {
+                    LOG.error("Failed Request : {} ", req);
+                }
+
             }
         }
     }
@@ -77,9 +79,12 @@ public class AnnotationClientService extends SerialisationUtils {
     }
 
     private ResponseEntity<String> callAnnotationAPI(String requestJson) throws IOException {
-        ResponseEntity<String> res = webAnnotationProtocolApi.createAnnotation(requestJson, MotivationTypes.HIGHLIGHTING.getOaType(), POST_PUBLICATION_USER);
+        LOG.debug("Sending annotation api request - {}",requestJson);
+        String oaType = MotivationTypes.HIGHLIGHTING.getOaType();
+        ResponseEntity<String> res= webAnnotationProtocolApi.createAnnotation(requestJson, null, POST_PUBLICATION_USER);
         if( HttpStatus.SC_OK != res.getStatusCodeValue()){
-               throw new IOException(String.format("Error received during annotation call !! : %s   %s" ,res.getStatusCode(),res.getBody()));
+               LOG.error("Error Response :  {} - {}", res.getStatusCode(),res.getBody());
+               throw new IOException("Annotation Call failed !!");
         }
         return res;
     }
