@@ -10,9 +10,7 @@ import eu.europeana.postpublication.debias.model.Context;
 import eu.europeana.postpublication.debias.model.DebiasRequest;
 import eu.europeana.postpublication.debias.utils.SerialisationUtils;
 import java.io.InputStream;
-import java.net.http.HttpResponse.BodyHandlers;
-import java.util.Collections;
-import java.util.Optional;
+import java.nio.charset.StandardCharsets;
 import java.util.zip.GZIPInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.hc.core5.http.HttpStatus;
@@ -46,6 +44,9 @@ public class DebiasService extends SerialisationUtils {
 
     @Value("${debias.endpoint:}")
     private String debiasEndpoint;
+
+    @Value("${annotation.item.data.endpoint}")
+    private String annotationItemDataEndpoint;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -92,20 +93,42 @@ public class DebiasService extends SerialisationUtils {
      * @throws DebiasException
      */
     public List<Annotation> getAnnotationsForBiasTerms(DebiasRequest request) throws DebiasException {
-        HttpRequest post = createRequest(debiasEndpoint, request);
-        return   sendRequestAndGetResponse(post);
+        OutputStream requestStream = getRequestStreamForDebiaseCall(request);
+        HttpRequest post = createRequest(debiasEndpoint, requestStream);
+        String output = "";
+        try {
+            output = sendRequestAndGetResponse(post);
+            return deserialize(mapper, output);
+
+        } catch (IOException | InterruptedException e) {
+            LOG.error("Exception occurred during debiase call !!!");
+            LOG.error(" Request : {} ", requestStream);
+            LOG.error(" Response : {} ", output);
+           // Thread.currentThread().interrupt();
+            throw new DebiasException(e.getMessage(), e);
+        } catch (JsonParseException e) {
+            LOG.error("Exception occurred while parsing Response : {} ", output);
+            throw new DebiasException(
+                "Error from AnnotationLdParser while deserializing response {} - " + e.getMessage(),
+                e);
+        }
     }
 
-    private HttpRequest createRequest(String debiasEndpoint, DebiasRequest request) throws DebiasException {
+    private HttpRequest createRequest(String debiasEndpoint,OutputStream stream) {
+
+        return HttpRequest
+            .newBuilder(URI.create(debiasEndpoint))
+            .POST(HttpRequest.BodyPublishers.ofString(stream.toString()))
+            .setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setHeader(HttpHeaders.ACCEPT_ENCODING, "gzip, deflate")
+            .build();
+    }
+
+    private OutputStream getRequestStreamForDebiaseCall(DebiasRequest request) throws DebiasException {
         try (OutputStream stream = new ByteArrayOutputStream()) {
-            serialise(mapper, request, stream);
-            return HttpRequest
-                    .newBuilder(URI.create(debiasEndpoint))
-                    .POST(HttpRequest.BodyPublishers.ofString(stream.toString()))
-                    .setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setHeader(HttpHeaders.ACCEPT_ENCODING, "gzip, deflate")
-                    .build();
+            serialise(annotationItemDataEndpoint,mapper, request, stream);
+            return stream;
         } catch (IOException e) {
             throw new DebiasException(e.getMessage());
         }
@@ -113,27 +136,20 @@ public class DebiasService extends SerialisationUtils {
 
     // TODO error messages from Debias are in a very complex structure. Would be nice to have some solution for that. To know what excatly went wrong
     // For now whole error response body is sent if there is an error in the exception
-    private List<Annotation> sendRequestAndGetResponse(HttpRequest post) throws DebiasException {
-        try {
-            //HttpResponse<String> response = httpClient.send(post, BodyHandlers.ofString());
-
-            HttpResponse<InputStream> response = httpClient.send(post, HttpResponse.BodyHandlers.ofInputStream());
-            int httpStatusCode = response.statusCode();
-            if (httpStatusCode != HttpStatus.SC_OK) {
-                throw new IOException("Error from Debias API: " +
-                        httpStatusCode + " - " + response.body());
-            } else {
-               String responseEncoding = response.headers().firstValue("Content-Encoding").orElse("");
-                if(responseEncoding.equals("gzip")){
-                    GZIPInputStream gis=new GZIPInputStream(response.body());
-                    return deserialize( mapper,IOUtils.toString(gis));
-                }
-                return deserialize(mapper, response.body().toString());
+    private String sendRequestAndGetResponse(HttpRequest post)
+        throws IOException, InterruptedException {
+        HttpResponse<InputStream> response = httpClient.send(post,HttpResponse.BodyHandlers.ofInputStream());
+        int httpStatusCode = response.statusCode();
+        if (httpStatusCode != HttpStatus.SC_OK) {
+            throw new IOException(String.format("Error from Debias API: %s   %s" ,httpStatusCode,response.body()));
+        } else {
+            String responseEncoding = response.headers().firstValue("Content-Encoding").orElse("");
+            if (responseEncoding.equals("gzip")) {
+                GZIPInputStream gis = new GZIPInputStream(response.body());
+                return IOUtils.toString(gis, StandardCharsets.UTF_8);
             }
-        } catch (IOException | InterruptedException e) {
-            throw new DebiasException(e.getMessage(), e);
-        } catch (JsonParseException e) {
-            throw new DebiasException("Error from AnnotationLdParser while deserializing response  - " + e.getMessage(), e);
+            return IOUtils.toString(response.body(), StandardCharsets.UTF_8);
         }
     }
+
 }

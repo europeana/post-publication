@@ -56,7 +56,8 @@ public class AnnotationFileWriter extends FlatFileItemWriterBuilder<List<Annotat
         return annotations -> {
             try (OutputStream stream = new ByteArrayOutputStream()) {
             for (Annotation annotation : annotations) {
-                SerialisationUtils.serialiseAnnotation(mapper, annotation, stream);
+                SerialisationUtils utils = new SerialisationUtils();
+                utils.serialiseAnnotation(settings.getAnnotationIdBaseUrl(),annotation, stream);
                 stream.write('\n');
                 }
                 return stream.toString();
