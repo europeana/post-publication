@@ -61,7 +61,7 @@ public class AnnotationClientService extends SerialisationUtils {
                  res = callAnnotationAPI(req);
             } catch (IOException e) {
                 if(req != null){ LOG.error("Request : {} ", req); }
-                LOG.error("Response : {} - {} ", res.getStatusCode(), res.getBody()); }
+                if(res != null){LOG.error("Response : {} - {} ", res.getStatusCode(), res.getBody());}
             }
         }
     }
