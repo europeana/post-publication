@@ -59,11 +59,9 @@ public class AnnotationClientService extends SerialisationUtils {
             try {
                 ResponseEntity<String> res = callAnnotationAPI(req);
                 LOG.debug("Annotation Created : {}", res.getBody().toString());
-            } catch (IOException e) {
-                if (req != null) {
-                    LOG.error("Failed Request : {} ", req);
-                }
-
+            } catch (Exception e) {
+                LOG.error("Failed Request : {} ", req, e);
+                throw new DebiasException(e.getMessage());
             }
         }
     }
