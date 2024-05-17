@@ -4,7 +4,6 @@ import eu.europeana.postpublication.translation.exception.InvalidParamValueExcep
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -19,7 +18,7 @@ public enum Language {
 
     private static final Set<String> LANGUAGES = new HashSet<>(Stream.of(Language.values())
             .map(Enum::name)
-            .collect(Collectors.toList()));
+            .toList());
 
     private static final String SEPARATOR = ",";
 

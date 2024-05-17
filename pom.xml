@@ -4,6 +4,7 @@
     <modules>
         <module>post-publication-batch</module>
         <module>post-publication-translation</module>
+        <module>post-publication-debias</module>
     </modules>
 
     <parent>
@@ -44,15 +45,21 @@
         <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
+
+        <metis.framework.version>11</metis.framework.version>
+        <morphia.version>2.4.3</morphia.version>
         <corelib.version>2.16.7</corelib.version>
-        <metis.version>8</metis.version>
+
         <api.commons.version>0.3.17</api.commons.version>
         <httpclient.version>4.5.13</httpclient.version>
+        <httpclient5.version>5.3</httpclient5.version>
         <springbatch.mongo.version>1.0.3</springbatch.mongo.version>
         <spring-boot.version>2.5.5</spring-boot.version>
         <git-commit-id.version>5.0.0</git-commit-id.version>
         <springdoc.version>1.6.13</springdoc.version>
         <snappy.version>1.1.8.4</snappy.version>
+        <annotation.api.version>0.5.1-SNAPSHOT</annotation.api.version>
+        <jackson.version>2.17.0</jackson.version>
     </properties>
 
     <dependencyManagement>
@@ -105,6 +112,21 @@
             <artifactId>springdoc-openapi-ui</artifactId>
             <version>${springdoc.version}</version>
         </dependency>
+
+       <!--  Adding the jackson dependencies heer at project level as many transitive dependencies have different versions
+             included due to which alot of errors are propagated while accessing object mapper features -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>

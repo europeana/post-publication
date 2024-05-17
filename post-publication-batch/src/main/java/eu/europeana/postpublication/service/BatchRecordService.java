@@ -4,21 +4,20 @@ import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.Sort;
-import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.filters.Filter;
+import dev.morphia.query.filters.Filters;
 import eu.europeana.corelib.solr.bean.impl.FullBeanImpl;
 import eu.europeana.metis.mongo.utils.MorphiaUtils;
 import eu.europeana.postpublication.utils.AppConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import dev.morphia.query.experimental.filters.Filter;
 
 import static eu.europeana.postpublication.utils.AppConstants.ABOUT;
 import static eu.europeana.postpublication.utils.AppConstants.TIMESTAMP_UPDATED;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Service(AppConstants.BEAN_BATCH_RECORD_SERVICE)
@@ -54,10 +53,16 @@ public class BatchRecordService {
      * @param queryFilters filters applied
      * @return
      */
-    public List<FullBeanImpl> getNextPageOfRecords(int start, int pageSize, Filter[] queryFilters) {
+    public List<FullBeanImpl> getNextPageOfRecords(int start, int pageSize, Filter[] queryFilters, List<String> projectionFields) {
         Query<FullBeanImpl> query = this.datastore.find(FullBeanImpl.class);
         query.filter(queryFilters);
-        return MorphiaUtils.getListOfQueryRetryable(query, new FindOptions().skip(start).limit(pageSize));
+
+        FindOptions findOptions = new FindOptions();
+        if (projectionFields != null && !projectionFields.isEmpty()) {
+            findOptions.projection().include(projectionFields.toArray(String[]::new));
+        }
+
+        return MorphiaUtils.getListOfQueryRetryable(query, findOptions.skip(start).limit(pageSize));
     }
 
     /**
@@ -83,7 +88,7 @@ public class BatchRecordService {
                 .filter(filters.toArray(new Filter[0]));
 
         return MorphiaUtils.getListOfQueryRetryable(query, new FindOptions().projection().include(projectionFields.toArray(String[]::new)))
-                .stream().map(FullBeanImpl::getAbout).collect(Collectors.toList());
+                .stream().map(FullBeanImpl::getAbout).toList();
     }
 
 
@@ -111,7 +116,7 @@ public class BatchRecordService {
                 .filter(Filters.regex(ABOUT).pattern("^/" + datasetId + "/"));
 
         return MorphiaUtils.getListOfQueryRetryable(query, new FindOptions().projection().include(projectionFields.toArray(String[]::new)))
-                .stream().map(FullBeanImpl :: getAbout).collect(Collectors.toList());
+                .stream().map(FullBeanImpl :: getAbout).toList();
     }
 
 }

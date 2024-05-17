@@ -35,7 +35,8 @@
         </Root>
 
         <Logger name="org.apache.http" level="INFO"/>
-        <Logger name="eu.europeana.postpublication" level="DEBUG"/>
+        <Logger name="eu.europeana.postpublication.batch" level="DEBUG"/>
+        <Logger name="eu.europeana.postpublication.debias" level="DEBUG"/>
         <Logger name="eu.europeana.postpublication.translation" level="INFO"/>
         <!--Suppress unhelpful Spring Batch warnings.
         See https://stackoverflow.com/questions/23780587/spring-batch-reader-in-multi-threader-job -->

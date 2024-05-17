@@ -12,9 +12,9 @@ import static eu.europeana.postpublication.batch.utils.BatchUtils.getRecordIds;
 import java.util.List;
 
 @Component
-public class PostPublicationUpdateListener extends ItemListenerSupport<FullBean, FullBean> {
+public class RecordUpdateListener extends ItemListenerSupport<List<FullBean>, FullBean> {
 
-    private static final Logger logger = LogManager.getLogger(PostPublicationUpdateListener.class);
+    private static final Logger logger = LogManager.getLogger(RecordUpdateListener.class);
 
     @Override
     public void onReadError(@NonNull Exception e) {
@@ -23,17 +23,15 @@ public class PostPublicationUpdateListener extends ItemListenerSupport<FullBean,
     }
 
     @Override
-    public void onProcessError(@NonNull FullBean bean, @NonNull Exception e) {
+    public void onProcessError(@NonNull List<FullBean> beans, @NonNull Exception e) {
         // just log warning for now
-        logger.error(
-                "Error processing Record id={}; recordId={}",
-                bean.getId(),
-                bean.getAbout(),
-                e);
+        // logger.error("Error processing Record id={}; recordId={}", bean.getId(), bean.getAbout(),e);
+        logger.error("Error processing Record ids {}", beans.stream().map(FullBean :: getAbout).toList(),e);
     }
-
     @Override
     public void onWriteError(@NonNull Exception ex, @NonNull List<? extends FullBean> recordIds) {
         logger.error("Error saving Records {}, ", getRecordIds(recordIds), ex);
     }
+
+
 }

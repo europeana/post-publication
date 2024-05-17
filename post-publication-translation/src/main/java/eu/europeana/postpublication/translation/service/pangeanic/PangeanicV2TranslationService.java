@@ -7,9 +7,8 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.config.SocketConfig;
-import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
+
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
@@ -131,25 +130,30 @@ public class PangeanicV2TranslationService implements TranslationService {
                 if (!obj.has(PangeanicTranslationUtils.TRANSLATIONS)) {
                     throw new TranslationException("Pangeanic Translation API returned empty response");
                 }
-                JSONArray translations = obj.getJSONArray(PangeanicTranslationUtils.TRANSLATIONS);
-                for (int i = 0; i < translations.length(); i++) {
-                    JSONObject object = (JSONObject) translations.get(i);
-                    if (hasTranslations(object)) {
-                        double score = object.getDouble(PangeanicTranslationUtils.TRANSLATE_SCORE);
-                        // only if score returned by the translation service is greater the threshold value, we will accept the translations
-                        if (score > PangeanicLanguages.getThresholdForLanguage(sourceLanguage)) {
-                            results.put(object.getString(PangeanicTranslationUtils.TRANSLATE_SOURCE), object.getString(PangeanicTranslationUtils.TRANSLATE_TARGET));
-                        } else {
-                            // for discarded thresholds add null as translations values
-                            results.put(object.getString(PangeanicTranslationUtils.TRANSLATE_SOURCE), null);
-                        }
-                    }
-                }
+                processTranslations(sourceLanguage, obj, results);
                 // response should not be empty
                 if (results.isEmpty()) {
                     throw new TranslationException("Translation failed for source language - " +obj.get(PangeanicTranslationUtils.SOURCE_LANG));
                 }
                 return  results;
+            }
+        }
+    }
+
+    private void processTranslations(String sourceLanguage, JSONObject obj, Map<String, String> results)
+        throws JSONException {
+        JSONArray translations = obj.getJSONArray(PangeanicTranslationUtils.TRANSLATIONS);
+        for (int i = 0; i < translations.length(); i++) {
+            JSONObject object = (JSONObject) translations.get(i);
+            if (hasTranslations(object)) {
+                double score = object.getDouble(PangeanicTranslationUtils.TRANSLATE_SCORE);
+                // only if score returned by the translation service is greater the threshold value, we will accept the translations
+                if (score > PangeanicLanguages.getThresholdForLanguage(sourceLanguage)) {
+                    results.put(object.getString(PangeanicTranslationUtils.TRANSLATE_SOURCE), object.getString(PangeanicTranslationUtils.TRANSLATE_TARGET));
+                } else {
+                    // for discarded thresholds add null as translations values
+                    results.put(object.getString(PangeanicTranslationUtils.TRANSLATE_SOURCE), null);
+                }
             }
         }
     }

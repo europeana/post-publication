@@ -57,16 +57,6 @@ public class BatchUtils {
             );
         }
 
-//    public static String getSetsToProcess(Map<String, List<String>> failedSetsOrRecords) {
-//        StringBuilder sets = new StringBuilder();
-//        for (Map.Entry<String, List<String>> entry : failedSetsOrRecords.entrySet()) {
-//            if(entry.getValue().isEmpty()) {
-//                sets.append(entry.getKey() + ",");
-//            }
-//        }
-//        return  sets.toString();
-//    }
-
     public static int getTotalFailed(Map<String, List<String>> failedSetsOrRecords) {
         int failed =0;
         for (Map.Entry<String, List<String>> entry : failedSetsOrRecords.entrySet()) {

@@ -1,12 +1,21 @@
 package eu.europeana.postpublication.batch.config;
 
-import com.mongodb.MongoClient;
 import com.mongodb.client.MongoClients;
 import dev.morphia.Datastore;
+import eu.europeana.annotation.client.WebAnnotationProtocolApi;
+import eu.europeana.annotation.client.WebAnnotationProtocolApiImpl;
+import eu.europeana.annotation.client.config.ClientConfiguration;
+import eu.europeana.annotation.client.connection.AnnotationApiConnection;
 import eu.europeana.batch.entity.JobExecutionEntity;
 import eu.europeana.corelib.solr.bean.impl.FullBeanImpl;
+import eu.europeana.indexing.exception.SetupRelatedIndexingException;
+import eu.europeana.indexing.solr.SolrIndexingSettings;
 import eu.europeana.indexing.utils.TriConsumer;
 import eu.europeana.metis.mongo.dao.RecordDao;
+import eu.europeana.metis.solr.connection.SolrProperties;
+import eu.europeana.postpublication.batch.model.ExecutionStep;
+import eu.europeana.postpublication.debias.service.DebiasService;
+import eu.europeana.postpublication.exception.InvalidExecutionStep;
 import eu.europeana.postpublication.translation.service.LanguageDetectionService;
 import eu.europeana.postpublication.translation.service.pangeanic.PangeanicV2LangDetectService;
 import eu.europeana.postpublication.translation.service.pangeanic.PangeanicV2TranslationService;
@@ -19,7 +28,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Date;
+import java.util.Properties;
+
+import static eu.europeana.postpublication.debias.utils.AppConstants.POST_PUBLICATION_USER;
+
 
 @Configuration
 public class PostPublicationDataConfig {
@@ -30,7 +45,6 @@ public class PostPublicationDataConfig {
 
     private static final TriConsumer<FullBeanImpl, FullBeanImpl, Pair<Date, Date>> EMPTY_PREPROCESSOR = (created, updated, recordDateAndCreationDate) -> {
     };
-
 
     public PostPublicationDataConfig(PostPublicationSettings settings) {
         this.settings = settings;
@@ -63,12 +77,18 @@ public class PostPublicationDataConfig {
      */
     @Bean(name = AppConstants.RECORD_DAO)
     public RecordDao recordDao() {
+        if (settings.getWriteDatabase().isEmpty()) {
+            return  null;
+        }
         logger.info("Configuring writer database: {}", settings.getWriteDatabase());
         return new RecordDao(MongoClients.create(settings.getMongoWriteConnectionUrl()), settings.getWriteDatabase(), true);
     }
 
     @Bean(name = AppConstants.BEAN_WRITER_DATA_STORE)
     public Datastore recordDaoDatastore() {
+        if (recordDao() == null) {
+            return null;
+        }
         return recordDao().getDatastore();
     }
 
@@ -82,6 +102,33 @@ public class PostPublicationDataConfig {
     @Bean(name = AppConstants.FULL_BEAN_PRE_PROCESSOR)
     public TriConsumer fullBeanPreprocessor() {
         return EMPTY_PREPROCESSOR;
+    }
+
+
+    // solr indexing beans
+
+    /**
+     * Solr properties solr properties.
+     *
+     * @return the solr properties
+     * @throws URISyntaxException the uri syntax exception
+     * @throws SetupRelatedIndexingException the setup related indexing exception
+     */
+    @Bean
+    SolrProperties<SetupRelatedIndexingException> solrProperties() throws SetupRelatedIndexingException {
+        try {
+            logger.info("Configuring the solr properties for indexing - {}" , settings.getSolrUrl());
+            SolrProperties<SetupRelatedIndexingException> solrProperties = new SolrProperties<>(SetupRelatedIndexingException::new);
+            solrProperties.addSolrHost(new URI(settings.getSolrUrl()));
+            return solrProperties;
+        } catch (URISyntaxException e) {
+            throw new SetupRelatedIndexingException("Invalid solr host !!!");
+        }
+    }
+
+    @Bean(name = AppConstants.SOLR_INDEXING_SETTING_BEAN)
+    public SolrIndexingSettings solrIndexingSettings() throws SetupRelatedIndexingException {
+        return new SolrIndexingSettings(solrProperties());
     }
 
 
@@ -107,4 +154,62 @@ public class PostPublicationDataConfig {
     }
 
 
+    /**
+     * Will create list of valid steps.
+     * @return list of steps to be exceuted
+     */
+    @Bean(name = AppConstants.EXECUTION_STEPS_BEAN)
+    public ExecutionStep getExecutionStep() throws InvalidExecutionStep {
+        ExecutionStep step = ExecutionStep.getStep(settings.getStepToExecute());
+        if (step != null) {
+            logger.info("Configured step for execution: {}", step);
+            return step;
+        }
+        throw new InvalidExecutionStep("Invalid execution step configured - " + settings.getStepToExecute());
+    }
+
+    @Bean(name = AppConstants.DEBIAS_SERVICE_BEAN)
+    public DebiasService getDebiasService() {
+        return new DebiasService();
+    }
+
+
+    @Bean(name = AppConstants.ANNOTATION_API_CLIENT_BEAN)
+    public ClientConfiguration annotationApiClientConfiguration() {
+        ClientConfiguration annotationApiClientConfig = new ClientConfiguration(loadProperties());
+        return annotationApiClientConfig;
+    }
+
+    @Bean(name = AppConstants.ANNOTATION_API_WEB_PROTOCOL_BEAN)
+    public WebAnnotationProtocolApi getWebAnnotationProtocolApi() {
+        return new WebAnnotationProtocolApiImpl(
+                annotationApiClientConfiguration(),
+                new AnnotationApiConnection(
+                        annotationApiClientConfiguration().getServiceUri(),
+                        annotationApiClientConfiguration().getApiKey()));
+    }
+
+
+    /**
+     * Creates a new property file with post publication properties and annotation api client properties needed
+     * to instantiate Annotation api client
+     *
+     * @return
+     */
+    private Properties loadProperties() {
+        Properties properties = new Properties();
+        properties.put(ClientConfiguration.PROP_ANNOTATION_SERVICE_BASE_URI, settings.getAnnotationServiceUrl());
+        properties.put(ClientConfiguration.PROP_ANNOTATION_API_KEY, settings.getAnnotationApiKey());
+        properties.put(ClientConfiguration.PROP_ANNOTATION_ITEM_DATA_ENDPOINT, settings.getAnnotationItemDataEndpoint());
+        properties.put(ClientConfiguration.PROP_ANNOTATION_CLIENT_API_ENDPOINT, settings.getAnnotationClientApiEndpoint());
+
+        properties.put(ClientConfiguration.PROP_AUTHORIZATION_HEADER_NAME, settings.getAuthHeaderName());
+        properties.put(ClientConfiguration.PROP_REGULAR_AUTHORIZATION_HEADER_VALUE, settings.getAnnotationRegularAuthValue());
+        properties.put(ClientConfiguration.PROP_ADMIN_ANNOTATION_HEADER_VALUE, settings.getAnnotationAdminAuthValue());
+
+        properties.put(ClientConfiguration.PROP_OAUTH_SERVICE_URI, settings.getOuthServiceUrl());
+        properties.put(ClientConfiguration.PROP_OAUTH_REQUEST_PARAMS_PREFIX + POST_PUBLICATION_USER, settings.getOuthTokenForPostPublication());
+
+        return properties;
+    }
 }

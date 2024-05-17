@@ -6,6 +6,7 @@ import dev.morphia.query.Sort;
 import eu.europeana.postpublication.batch.model.PostPublicationJobMetadata;
 import eu.europeana.postpublication.utils.AppConstants;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -13,11 +14,14 @@ public class PostPublicationJobMetadataRepo {
 
     private final Datastore datastore;
 
-    public PostPublicationJobMetadataRepo(@Qualifier(AppConstants.BEAN_WRITER_DATA_STORE) Datastore datastore) {
+    public PostPublicationJobMetadataRepo(@Nullable @Qualifier(AppConstants.BEAN_WRITER_DATA_STORE) Datastore datastore) {
         this.datastore = datastore;
     }
 
     public PostPublicationJobMetadata getMostRecentPostPublicationMetadata() {
+        if (this.datastore == null) {
+            return new PostPublicationJobMetadata();
+        }
         return datastore
                 .find(PostPublicationJobMetadata.class)
                 .iterator(new FindOptions().sort(Sort.descending("lastSuccessfulStartTime")).limit(1))
