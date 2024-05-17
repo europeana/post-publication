@@ -80,7 +80,7 @@ public class AnnotationClientService extends SerialisationUtils {
         LOG.debug("Sending annotation api request - {}",requestJson);
         String oaType = MotivationTypes.HIGHLIGHTING.getOaType();
         ResponseEntity<String> res= webAnnotationProtocolApi.createAnnotation(requestJson, null, POST_PUBLICATION_USER);
-        if( HttpStatus.SC_OK != res.getStatusCodeValue()){
+        if( HttpStatus.SC_CREATED != res.getStatusCodeValue()){
                LOG.error("Error Response :  {} - {}", res.getStatusCode(),res.getBody());
                throw new IOException("Annotation Call failed !!");
         }
