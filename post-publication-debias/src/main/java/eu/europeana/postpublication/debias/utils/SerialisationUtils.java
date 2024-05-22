@@ -5,11 +5,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.cfg.ContextAttributes;
 import eu.europeana.annotation.definitions.model.Annotation;
+import eu.europeana.annotation.definitions.model.target.Target;
 import eu.europeana.annotation.definitions.model.vocabulary.MotivationTypes;
 import eu.europeana.annotation.utils.parse.AnnotationLdParser;
 import eu.europeana.annotation.utils.serialize.AnnotationLdSerializer;
 import eu.europeana.postpublication.debias.model.Context;
 import eu.europeana.postpublication.debias.model.DebiasRequest;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.stanbol.commons.exception.JsonParseException;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -42,13 +44,19 @@ public class SerialisationUtils {
      * @throws JsonProcessingException
      * @throws JsonParseException
      */
-    public List<Annotation> deserialize(ObjectMapper mapper, String json) throws JsonProcessingException, JsonParseException {
+    public List<Annotation> deserialize(ObjectMapper mapper, String json,String annoatiaonDataEndpoint) throws JsonProcessingException, JsonParseException {
         List<Annotation> response = new ArrayList<>();
         // items
         JsonNode itemsNode = mapper.readTree(json).get(ITEMS);
         if (itemsNode.isArray()) {
             for (JsonNode item : itemsNode) {
                 Annotation annotation = annotationLdParser.parseAnnotation(MotivationTypes.HIGHLIGHTING, String.valueOf(item));
+                for(Target target:annotation.getTarget()){
+                    String source = target.getSource();
+                    if(StringUtils.isNotBlank(source) && !source.startsWith(annoatiaonDataEndpoint)){
+                        target.setSource(annoatiaonDataEndpoint+source);
+                    }
+                }
                 response.add(annotation);
             }
         }
