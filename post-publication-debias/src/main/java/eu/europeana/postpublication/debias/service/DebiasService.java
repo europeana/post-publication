@@ -98,7 +98,7 @@ public class DebiasService extends SerialisationUtils {
         String output = "";
         try {
             output = sendRequestAndGetResponse(post);
-            return deserialize(mapper, output);
+            return deserialize(mapper, output,annotationItemDataEndpoint);
 
         } catch (IOException | InterruptedException e) {
             LOG.error("Exception occurred during debiase call !!!");
