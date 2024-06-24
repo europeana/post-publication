@@ -32,7 +32,7 @@ public class RecordAnnotationService {
      * in both Item and FullBean class
      *
      */
-    private static final Set<String> INCLUDE_PROXY_MAP_FIELDS = Set.of("dcTitle", "dctermsAlternative", "dcDescription");
+    private static final Set<String> INCLUDE_PROXY_MAP_FIELDS = Set.of("dcTitle", "dctermsAlternative", "dcDescription","dcSubject","dcType");
 
     protected static final ReflectionUtils.FieldFilter proxyFieldFilter = field -> field.getType().isAssignableFrom(Map.class) &&
             INCLUDE_PROXY_MAP_FIELDS.contains(field.getName());
