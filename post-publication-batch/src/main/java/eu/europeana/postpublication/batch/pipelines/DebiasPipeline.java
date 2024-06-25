@@ -36,7 +36,7 @@ public class DebiasPipeline implements AbstractPipeline {
 
     @Override
     public List<String> getFieldsToFetchFromReader() {
-      return new ArrayList<>(Arrays.asList("about", "proxies"));
+      return new ArrayList<>(Arrays.asList("about", "proxies","concepts"));
     }
 
     @Override
