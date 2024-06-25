@@ -116,9 +116,14 @@ public class DebiasService extends SerialisationUtils {
 
     private HttpRequest createRequest(String debiasEndpoint,OutputStream stream) {
 
+        String requestBody = stream.toString();
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("Sending Debias tool Request :- " + requestBody);
+        }
+
         return HttpRequest
             .newBuilder(URI.create(debiasEndpoint))
-            .POST(HttpRequest.BodyPublishers.ofString(stream.toString()))
+            .POST(HttpRequest.BodyPublishers.ofString(requestBody))
             .setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
             .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .setHeader(HttpHeaders.ACCEPT_ENCODING, "gzip, deflate")
