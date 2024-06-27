@@ -7,6 +7,7 @@ import eu.europeana.corelib.definitions.edm.entity.Proxy;
 import eu.europeana.postpublication.debias.exception.DebiasException;
 import eu.europeana.postpublication.debias.model.*;
 
+import java.util.Map.Entry;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -113,9 +114,18 @@ public class RecordAnnotationService {
                         itemsMap.put(language, new ArrayList<>(Arrays.asList(item))); // create modifiable list
                     }
                     // update the field value in the Item
-                    List<String> existingValue = getValueOfTheListFields(item, true).apply(field.getName());
-                    existingValue.addAll(entry.getValue());
+                    updateItemWithFieldValues(field, entry, item);
                 }
+            }
+        }
+    }
+
+    private static void updateItemWithFieldValues(Field field, Entry<String, List<String>> entry, Item item) {
+        List<String> existingValue = getValueOfTheListFields(item, true).apply(field.getName());
+        //Avoid duplicates
+        for(String value : entry.getValue()){
+            if(!existingValue.contains(value)) {
+                existingValue.add(value);
             }
         }
     }
