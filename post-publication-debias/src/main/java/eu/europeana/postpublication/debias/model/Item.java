@@ -24,7 +24,7 @@ public class Item {
     @JsonProperty("dc:description")
     private List<String> dcDescription;
 
-    @JsonProperty("dc:termsAlternative")
+    @JsonProperty("dcterms:alternative")
     private List<String> dctermsAlternative;
 
     @JsonProperty("dc:subject")
