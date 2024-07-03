@@ -15,6 +15,9 @@ import java.util.List;
 @PropertySource(value = "classpath:post-publication.user.properties", ignoreResourceNotFound = true)
 public class PostPublicationSettings implements InitializingBean {
 
+    @Value("${batch.chunkSize: 5}")
+    private int chunkSize;
+
     @Value("${run.post.publication:#{true}}")
     private Boolean isFrameworkEnabled;
 
@@ -222,6 +225,8 @@ public class PostPublicationSettings implements InitializingBean {
     public String getOuthTokenForPostPublication() {
         return outhTokenForPostPublication;
     }
+
+    public int getChunkSize() { return chunkSize;  }
 
     private void validateRequiredSettings() {
         if (StringUtils.equals(writeDatabase, readDatabase)) {

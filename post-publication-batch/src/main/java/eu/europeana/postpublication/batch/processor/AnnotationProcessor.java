@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class AnnotationProcessor implements ItemProcessor<List<FullBean>, List<Annotation>> {
@@ -26,8 +25,9 @@ public class AnnotationProcessor implements ItemProcessor<List<FullBean>, List<A
 
     @Override
     public List<Annotation> process(List<FullBean> fullBeans) throws Exception {
-        //logger.debug("processing {} items" , fullBeans.size());
-        logger.debug("processing {} - {}", fullBeans.size(), fullBeans.stream().map(f -> f.getAbout()).collect(Collectors.toList()));
+        logger.debug("processing {} items" , fullBeans.size());
+     //   logger.debug("processing {} - {}", fullBeans.size(), fullBeans.stream().map(f -> f.getAbout()).collect(Collectors.toList()));
         return recordAnnotationService.process(fullBeans);
+
     }
 }
