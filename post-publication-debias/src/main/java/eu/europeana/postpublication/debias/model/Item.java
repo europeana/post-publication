@@ -24,14 +24,14 @@ public class Item {
     @JsonProperty("dc:description")
     private List<String> dcDescription;
 
-    @JsonProperty("dc:termsAlternative")
+    @JsonProperty("dcterms:alternative")
     private List<String> dctermsAlternative;
 
-//    @JsonProperty("dc:subject")
-//    private List<String> dcSubject;
-//
-//    @JsonProperty("dc:type")
-//    private List<String> dcType;
+    @JsonProperty("dc:subject")
+    private List<String> dcSubject;
+
+    @JsonProperty("dc:type")
+    private List<String> dcType;
 
     public Item(String id) {
         this.id = id;
@@ -69,21 +69,21 @@ public class Item {
         this.dctermsAlternative = dctermsAlternative;
     }
 
-//    public List<String> getDcSubject() {
-//        return dcSubject;
-//    }
-//
-//    public void setDcSubject(List<String> dcSubject) {
-//        this.dcSubject = dcSubject;
-//    }
-//
-//    public List<String> getDcType() {
-//        return dcType;
-//    }
-//
-//    public void setDcType(List<String> dcType) {
-//        this.dcType = dcType;
-//    }
+    public List<String> getDcSubject() {
+        return dcSubject;
+    }
+
+    public void setDcSubject(List<String> dcSubject) {
+        this.dcSubject = dcSubject;
+    }
+
+    public List<String> getDcType() {
+        return dcType;
+    }
+
+    public void setDcType(List<String> dcType) {
+        this.dcType = dcType;
+    }
 
     @Override
     public String toString() {
@@ -92,6 +92,8 @@ public class Item {
                 ", dcTitle=" + dcTitle +
                 ", dcDescription=" + dcDescription +
                 ", dctermsAlternative=" + dctermsAlternative +
+                ", dcSubject=" + dcSubject +
+                ", dcType=" + dcType +  
                 '}';
     }
 }

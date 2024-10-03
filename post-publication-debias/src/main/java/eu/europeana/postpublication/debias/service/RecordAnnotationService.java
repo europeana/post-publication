@@ -2,10 +2,12 @@ package eu.europeana.postpublication.debias.service;
 
 import eu.europeana.annotation.definitions.model.Annotation;
 import eu.europeana.corelib.definitions.edm.beans.FullBean;
+import eu.europeana.corelib.definitions.edm.entity.Concept;
 import eu.europeana.corelib.definitions.edm.entity.Proxy;
 import eu.europeana.postpublication.debias.exception.DebiasException;
 import eu.europeana.postpublication.debias.model.*;
 
+import java.util.Map.Entry;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,10 +34,12 @@ public class RecordAnnotationService {
      * in both Item and FullBean class
      *
      */
-    private static final Set<String> INCLUDE_PROXY_MAP_FIELDS = Set.of("dcTitle", "dctermsAlternative", "dcDescription");
+    private static final Set<String> INCLUDE_PROXY_MAP_FIELDS = Set.of("dcTitle", "dctermsAlternative", "dcDescription","dcSubject","dcType");
 
     protected static final ReflectionUtils.FieldFilter proxyFieldFilter = field -> field.getType().isAssignableFrom(Map.class) &&
-            INCLUDE_PROXY_MAP_FIELDS.contains(field.getName());
+        INCLUDE_PROXY_MAP_FIELDS.contains(field.getName());
+
+    private static final List<String> FIELD_WITH_POTENTIAL_REFERENCE_VAL = List.of("dcSubject","dcType");
 
     private final DebiasService debiasService;
 
@@ -64,7 +68,7 @@ public class RecordAnnotationService {
         }
 
         if (LOG.isDebugEnabled()) {
-           // LOG.debug("Gathered data for languages {} - {} ", itemsMap.keySet(), itemsMap);
+            // LOG.debug("Gathered data for languages {} - {} ", itemsMap.keySet(), itemsMap);
             LOG.debug("Gathered data for languages {} ", itemsMap.keySet());
         }
 
@@ -90,11 +94,17 @@ public class RecordAnnotationService {
     private void getProxyFieldValues(Proxy proxy, Field field, FullBean bean,  Map<String, List<Item>> itemsMap) {
         HashMap<String, List<String>> fieldData = (HashMap<String, List<String>>) getValueOfTheMapFields(proxy, false).apply(field.getName());
         if (fieldData != null && !fieldData.isEmpty()) {
+            //for the special fields ,if no values present for supported language , then use corresponding concept->preflabel values as fields values.
+            if(FIELD_WITH_POTENTIAL_REFERENCE_VAL.contains(field.getName())) {
+                fieldData.putAll(getValueForReferenceFields(fieldData, bean));
+            }
+
             for (Map.Entry<String, List<String>> entry : fieldData.entrySet()) {
-                if (DebiasLanguage.isSupported(entry.getKey())) {
+                String languageKey = entry.getKey();
+                if (DebiasLanguage.isSupported(languageKey)    ) {
                     // get the two-letter ISO code language. there are cases where we will have region codes
                     // we need to fetch the first two ISO letter for the request
-                    String language = DebiasLanguage.getLanguage(entry.getKey()).name().toLowerCase();
+                    String language = DebiasLanguage.getLanguage(languageKey).name().toLowerCase();
                     Item item = null;
                     if (itemsMap.containsKey(language)) {
                         // check if the item already is present for that language, if not default to new item
@@ -104,12 +114,52 @@ public class RecordAnnotationService {
                         itemsMap.put(language, new ArrayList<>(Arrays.asList(item))); // create modifiable list
                     }
                     // update the field value in the Item
-                    List<String> existingValue = getValueOfTheListFields(item, true).apply(field.getName());
-                    existingValue.addAll(entry.getValue());
+                    updateItemWithFieldValues(field, entry, item);
+                }
+            }
+        }
+    }
+
+    private static void updateItemWithFieldValues(Field field, Entry<String, List<String>> entry, Item item) {
+        List<String> existingValue = getValueOfTheListFields(item, true).apply(field.getName());
+        //Avoid duplicates
+        for(String value : entry.getValue()){
+            if(!existingValue.contains(value)) {
+                existingValue.add(value);
+            }
+        }
+    }
+
+    /** Method checks the proxy field and its values in the FullBean object.
+     * If there is no value present for the supported languages ,
+     * it checks the value associated to  default 'def' language.
+     * If any concept found for this value  , the map of associated preflable values is returned
+     * which later used as proxy field's actual value.
+     * @param fieldData
+     * @param bean
+     * @return Map of language and values from associated concept->preflabel for the given field from proxy.
+     */
+    public Map<String, List<String>> getValueForReferenceFields( HashMap<String, List<String>> fieldData ,FullBean bean){
+        for (Map.Entry<String, List<String>> entry : fieldData.entrySet()) {
+            //In case the value for supported  languge is present , we do not need to look for it in concept->preflabel
+            if(!DebiasLanguage.isSupported(entry.getKey()) && "def".equals(entry.getKey()) ) {
+                //get the values corresponding to def key
+                List<String> value = entry.getValue();
+                //check the conceptReference in the concept list associated to the fullbean
+                for (String conceptReferece : value) {
+                    List<Concept> conceptList = (List<Concept>) bean.getConcepts();
+                    Optional<Concept> matchedConcept = conceptList.stream()
+                        .filter(i -> StringUtils.equals(i.getAbout(), conceptReferece)).findFirst();
+                    // if the reference object of concept is found
+                    if (matchedConcept.isPresent()) {
+                        //return the map of preflabel which acts as the field value
+                        return matchedConcept.get().getPrefLabel();
+                    }
 
                 }
             }
         }
+        return new HashMap<>();
     }
 
     /**
@@ -141,6 +191,7 @@ public class RecordAnnotationService {
      * @return
      */
     private static Function<String, Map<String, List<String>>> getValueOfTheMapFields(Object proxy, boolean update) {
+
         return e -> {
             Field field = ReflectionUtils.findField(proxy.getClass(), e);
             ReflectionUtils.makeAccessible(field);

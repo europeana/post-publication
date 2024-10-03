@@ -23,9 +23,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 import javax.annotation.PostConstruct;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -92,43 +90,43 @@ public class DebiasService extends SerialisationUtils {
      * @return list of annotations
      * @throws DebiasException
      */
-    public List<Annotation> getAnnotationsForBiasTerms(DebiasRequest request) throws DebiasException {
-        OutputStream requestStream = getRequestStreamForDebiaseCall(request);
-        HttpRequest post = createRequest(debiasEndpoint, requestStream);
-        String output = "";
-        try {
+    public List<Annotation> getAnnotationsForBiasTerms(DebiasRequest request)
+        throws DebiasException {
+        String input ="";
+        String output="";
+        try  {
+            input = getRequestForDebiaseCall(request);
+            HttpRequest post = createRequest(debiasEndpoint, input);
             output = sendRequestAndGetResponse(post);
             return deserialize(mapper, output,annotationItemDataEndpoint);
-
         } catch (IOException | InterruptedException e) {
             LOG.error("Exception occurred during debiase call !!!");
-            LOG.error(" Request : {} ", requestStream);
-            LOG.error(" Response : {} ", output);
-           // Thread.currentThread().interrupt();
+            LOG.error(" Request : {} ", input);
             throw new DebiasException(e.getMessage(), e);
         } catch (JsonParseException e) {
             LOG.error("Exception occurred while parsing Response : {} ", output);
             throw new DebiasException(
-                "Error from AnnotationLdParser while deserializing response {} - " + e.getMessage(),
-                e);
+                "Error from AnnotationLdParser while deserializing response {} - " + e.getMessage(),e);
         }
+
     }
 
-    private HttpRequest createRequest(String debiasEndpoint,OutputStream stream) {
+    private HttpRequest createRequest(String debiasEndpoint,String requestBody) {
+
 
         return HttpRequest
             .newBuilder(URI.create(debiasEndpoint))
-            .POST(HttpRequest.BodyPublishers.ofString(stream.toString()))
+            .POST(HttpRequest.BodyPublishers.ofString(requestBody))
             .setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
             .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .setHeader(HttpHeaders.ACCEPT_ENCODING, "gzip, deflate")
             .build();
     }
 
-    private OutputStream getRequestStreamForDebiaseCall(DebiasRequest request) throws DebiasException {
-        try (OutputStream stream = new ByteArrayOutputStream()) {
-            serialise(annotationItemDataEndpoint,mapper, request, stream);
-            return stream;
+    private String getRequestForDebiaseCall(DebiasRequest request)
+        throws DebiasException {
+        try{
+            return serialise(annotationItemDataEndpoint,mapper, request);
         } catch (IOException e) {
             throw new DebiasException(e.getMessage());
         }
@@ -145,8 +143,9 @@ public class DebiasService extends SerialisationUtils {
         } else {
             String responseEncoding = response.headers().firstValue("Content-Encoding").orElse("");
             if (responseEncoding.equals("gzip")) {
-                GZIPInputStream gis = new GZIPInputStream(response.body());
-                return IOUtils.toString(gis, StandardCharsets.UTF_8);
+                try(GZIPInputStream gis = new GZIPInputStream(response.body())) {
+                    return IOUtils.toString(gis, StandardCharsets.UTF_8);
+                }
             }
             return IOUtils.toString(response.body(), StandardCharsets.UTF_8);
         }

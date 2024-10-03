@@ -102,13 +102,10 @@ public class PostPublicationJobConfig {
 
     /**
      *
-     * Depending on the Execution step in the property file - pipeline is exceuted with the specific processor, writer and listeners
-     *
+     * Depending on the Execution step in the property file - pipeline is exceuted with the specific processor, writer and listeners     *
      * Please look the #PipelineRegistryHandler to see the various pipelines configured
-     * For now supported ones are - Translations, Debias and Indexing (still work in progress)
-     *
+     * For now supported ones are - Translations, Debias and Indexing (still work in progress)     *
      *  Few Points :
-     *
      *  #processorNonTransactional :: Have marked the item processor as non-transactional (default is the opposite).
      *  If this flag is set the results of item processing are cached across transactions in between retries and
      *  during skip processing, otherwise the processor will be called in every transaction.
@@ -124,7 +121,7 @@ public class PostPublicationJobConfig {
 
         return this.stepBuilderFactory
                 .get("executePipeline")
-                .chunk(postPublicationSettings.getBatchChunkSize())
+                .chunk(postPublicationSettings.getChunkSize())
                 .reader(reader)
                 .processor(pipelineRegistryHandler.get(executionStep).getItemProcessor())
                 .writer(writeAnnotationsInFile() ? annotationFileWriter() : pipelineRegistryHandler.get(executionStep).getItemWriter())

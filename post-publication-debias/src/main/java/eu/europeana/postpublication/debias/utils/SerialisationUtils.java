@@ -11,6 +11,7 @@ import eu.europeana.annotation.utils.parse.AnnotationLdParser;
 import eu.europeana.annotation.utils.serialize.AnnotationLdSerializer;
 import eu.europeana.postpublication.debias.model.Context;
 import eu.europeana.postpublication.debias.model.DebiasRequest;
+import java.io.ByteArrayOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.stanbol.commons.exception.JsonParseException;
 import java.io.IOException;
@@ -26,15 +27,21 @@ public class SerialisationUtils {
 
     /**
      * Serialise the debias request
+     *
      * @param request
-     * @param stream
+     * @param  annotationItemDataEndpoint
+     * @param mapper
+     * @return
      * @throws IOException
      */
-    protected void serialise(String annotationItemDataEndpoint,ObjectMapper mapper, DebiasRequest request, OutputStream stream) throws IOException {
-        ContextAttributes attrs = ContextAttributes.getEmpty()
-                .withSharedAttribute(CONTEXT, new Context(annotationItemDataEndpoint+"/"));
-        mapper.setDefaultAttributes(attrs);
-        mapper.writerWithDefaultPrettyPrinter().writeValues(stream).write(request);
+    protected String serialise(String annotationItemDataEndpoint,ObjectMapper mapper, DebiasRequest request) throws IOException {
+        try (OutputStream stream = new ByteArrayOutputStream()) {
+            ContextAttributes attrs = ContextAttributes.getEmpty()
+                .withSharedAttribute(CONTEXT, new Context(annotationItemDataEndpoint + "/"));
+            mapper.setDefaultAttributes(attrs);
+            mapper.writerWithDefaultPrettyPrinter().writeValues(stream).write(request);
+            return stream.toString();
+        }
     }
 
     /**
